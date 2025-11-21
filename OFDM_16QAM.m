@@ -95,8 +95,9 @@ targetSNRdB = 15;                  % 目标信噪比（dB），用于15dB下的详细分析
 % 步骤1: 随机比特流生成
 %------------------------------------------------------------------------------
 baseband_out_length=carrier_count*symbols_per_carrier*bits_per_symbol;
-rand('twister',0);
-baseband_out=round(rand(1,baseband_out_length));
+% 使用新随机数生成器，确保每次运行不同；如需复现实验可改为 rng(fixed_seed)
+rng('default'); rng('shuffle');
+baseband_out = randi([0 1], 1, baseband_out_length);
 
 %------------------------------------------------------------------------------
 % 步骤2: 16QAM调制
