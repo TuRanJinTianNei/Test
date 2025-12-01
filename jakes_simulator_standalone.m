@@ -50,13 +50,28 @@ function jakes_simulator_standalone()
      [pdf_id, R_id] = gen_ideal_reference(fd, delta_t, N_step);
      fprintf('参考模型生成完成！\n\n');
      
-     %% ========================================================================
-     % 4. 绘制所有验证图表
-     % ========================================================================
-     fprintf('正在绘制验证图表...\n');
-     plot_jakes_results(g, pdf, R, pdf_id, R_id, time, fd, delta_t, t_sim, M);
-     fprintf('所有图表绘制完成！\n');
-     fprintf('========================================\n');
+    %% ========================================================================
+    % 4. 设置输出文件夹
+    % ========================================================================
+    output_folder = 'jakes_figures';  % 输出文件夹名称
+    if exist(output_folder, 'dir')
+        % 如果文件夹存在，删除其中的所有文件
+        delete(fullfile(output_folder, '*'));
+        fprintf('已清空输出文件夹: %s\n', output_folder);
+    else
+        % 如果文件夹不存在，创建它
+        mkdir(output_folder);
+        fprintf('已创建输出文件夹: %s\n', output_folder);
+    end
+    
+    %% ========================================================================
+    % 5. 绘制所有验证图表
+    % ========================================================================
+    fprintf('正在绘制验证图表...\n');
+    plot_jakes_results(g, pdf, R, pdf_id, R_id, time, fd, delta_t, t_sim, M, output_folder);
+    fprintf('所有图表绘制完成！\n');
+    fprintf('图表已保存到文件夹: %s\n', output_folder);
+    fprintf('========================================\n');
  end
  
  %% ============================================================================
@@ -187,12 +202,14 @@ function jakes_simulator_standalone()
  %% ============================================================================
  % 绘图函数
  % ============================================================================
- function plot_jakes_results(g, pdf, R, pdf_id, R_id, time, fd, delta_t, t_sim, M)
-     % 绘制所有Jakes模型的验证图表
-     
-     ln_wdt = 2;      % 线宽
-     f_size = 20;     % 字体大小
-     N_step = length(g);
+function plot_jakes_results(g, pdf, R, pdf_id, R_id, time, fd, delta_t, t_sim, M, output_folder)
+    % 绘制所有Jakes模型的验证图表
+    % 输入：
+    %   output_folder - 输出文件夹路径
+    
+    ln_wdt = 2;      % 线宽
+    f_size = 20;     % 字体大小
+    N_step = length(g);
      
      % 归一化时间延迟
      lags = (0:N_step-1)*(fd*delta_t);
@@ -215,11 +232,15 @@ function jakes_simulator_standalone()
      xlabel('$r$', 'Interpreter', 'latex', 'FontSize', f_size);
      ylabel('$f_{|g|}(r)$', 'Interpreter', 'latex', 'FontSize', f_size);
      xlim([0, 4]);
-     legend({'Reference (Ideal)', sprintf('Jakes ($M=%d$)', M)}, ...
+    legend({'Reference (Ideal)', sprintf('Jakes ($M=%d$)', M)}, ...
             'Interpreter', 'latex', 'FontSize', f_size);
-     title('衰落包络概率密度函数', 'FontSize', f_size);
-     
-     %% Figure 2: 相位概率密度函数（PDF）
+    title('衰落包络概率密度函数', 'FontSize', f_size);
+    
+    % 保存 Figure 1
+    saveas(gcf, fullfile(output_folder, 'Figure1_FadingEnvelope.png'));
+    saveas(gcf, fullfile(output_folder, 'Figure1_FadingEnvelope.fig'));
+    
+    %% Figure 2: 相位概率密度函数（PDF）
      figure('Name', 'Jakes - Phase PDF', 'NumberTitle', 'on');
      set(gcf, 'Position', [200, 100, 800, 600]);
      grid on; hold on;
@@ -235,11 +256,15 @@ function jakes_simulator_standalone()
      xlabel('$\theta$ ($\times \pi$)', 'Interpreter', 'latex', 'FontSize', f_size);
      ylabel('$f_{\theta}(\theta)$', 'Interpreter', 'latex', 'FontSize', f_size);
      xlim([-1, 1]);
-     legend({'Reference (Ideal)', sprintf('Jakes ($M=%d$)', M)}, ...
+    legend({'Reference (Ideal)', sprintf('Jakes ($M=%d$)', M)}, ...
             'Interpreter', 'latex', 'FontSize', f_size);
-     title('相位概率密度函数', 'FontSize', f_size);
-     
-     %% Figure 3: 复衰落过程自相关函数
+    title('相位概率密度函数', 'FontSize', f_size);
+    
+    % 保存 Figure 2
+    saveas(gcf, fullfile(output_folder, 'Figure2_PhasePDF.png'));
+    saveas(gcf, fullfile(output_folder, 'Figure2_PhasePDF.fig'));
+    
+    %% Figure 3: 复衰落过程自相关函数
      figure('Name', 'Jakes - Second Order Statistic', 'NumberTitle', 'on');
      set(gcf, 'Position', [200, 100, 800, 600]);
      grid on; hold on;
@@ -252,11 +277,15 @@ function jakes_simulator_standalone()
      xlabel('Normalized Time: $f_d \tau$', 'Interpreter', 'latex', 'FontSize', f_size);
      ylabel('$R_{g,g}(\tau)$', 'Interpreter', 'latex', 'FontSize', f_size);
      xlim([0, min(15, t_sim*fd)]);
-     legend({'Reference (Ideal)', sprintf('Jakes ($M=%d$)', M)}, ...
+    legend({'Reference (Ideal)', sprintf('Jakes ($M=%d$)', M)}, ...
             'Interpreter', 'latex', 'FontSize', f_size);
-     title('复衰落过程自相关函数', 'FontSize', f_size);
-     
-     %% Figure 4: 同相分量自相关函数
+    title('复衰落过程自相关函数', 'FontSize', f_size);
+    
+    % 保存 Figure 3
+    saveas(gcf, fullfile(output_folder, 'Figure3_ComplexAutocorr.png'));
+    saveas(gcf, fullfile(output_folder, 'Figure3_ComplexAutocorr.fig'));
+    
+    %% Figure 4: 同相分量自相关函数
      figure('Name', 'Jakes - Second Order Statistic', 'NumberTitle', 'on');
      set(gcf, 'Position', [200, 100, 800, 600]);
      grid on; hold on;
@@ -269,11 +298,15 @@ function jakes_simulator_standalone()
      xlabel('Normalized Time: $f_d \tau$', 'Interpreter', 'latex', 'FontSize', f_size);
      ylabel('$R_{g_c,g_c}(\tau)$', 'Interpreter', 'latex', 'FontSize', f_size);
      xlim([0, min(15, t_sim*fd)]);
-     legend({'Reference (Ideal)', sprintf('Jakes ($M=%d$)', M)}, ...
+    legend({'Reference (Ideal)', sprintf('Jakes ($M=%d$)', M)}, ...
             'Interpreter', 'latex', 'FontSize', f_size);
-     title('同相分量自相关函数', 'FontSize', f_size);
-     
-     %% Figure 5: 同相与正交分量互相关函数
+    title('同相分量自相关函数', 'FontSize', f_size);
+    
+    % 保存 Figure 4
+    saveas(gcf, fullfile(output_folder, 'Figure4_InPhaseAutocorr.png'));
+    saveas(gcf, fullfile(output_folder, 'Figure4_InPhaseAutocorr.fig'));
+    
+    %% Figure 5: 同相与正交分量互相关函数
      figure('Name', 'Jakes - Second Order Statistic', 'NumberTitle', 'on');
      set(gcf, 'Position', [200, 100, 800, 600]);
      grid on; hold on;
@@ -287,11 +320,15 @@ function jakes_simulator_standalone()
      ylabel('$R_{g_c,g_s}(\tau)$', 'Interpreter', 'latex', 'FontSize', f_size);
      ylim([-0.5, 0.5]);
      xlim([0, min(15, t_sim*fd)]);
-     legend({'Reference (Ideal)', sprintf('Jakes ($M=%d$)', M)}, ...
+    legend({'Reference (Ideal)', sprintf('Jakes ($M=%d$)', M)}, ...
             'Interpreter', 'latex', 'FontSize', f_size);
-     title('同相与正交分量互相关函数', 'FontSize', f_size);
-     
-     %% Figure 6: 时域波形
+    title('同相与正交分量互相关函数', 'FontSize', f_size);
+    
+    % 保存 Figure 5
+    saveas(gcf, fullfile(output_folder, 'Figure5_CrossCorr.png'));
+    saveas(gcf, fullfile(output_folder, 'Figure5_CrossCorr.fig'));
+    
+    %% Figure 6: 时域波形
      figure('Name', 'Jakes - Time Domain Waveform', 'NumberTitle', 'on');
      set(gcf, 'Position', [200, 100, 1000, 700]);
      
@@ -321,10 +358,14 @@ function jakes_simulator_standalone()
      xlabel('时间 t (s)', 'FontSize', f_size);
      ylabel('相位 \theta(t)/\pi', 'FontSize', f_size);
      title('Jakes信道时域波形 - 相位', 'FontSize', f_size);
-     ylim([-1, 1]);
-     xlim([0, min(5, t_sim)]);
-     
-     %% Figure 7: 幅度直方图
+    ylim([-1, 1]);
+    xlim([0, min(5, t_sim)]);
+    
+    % 保存 Figure 6
+    saveas(gcf, fullfile(output_folder, 'Figure6_TimeDomain.png'));
+    saveas(gcf, fullfile(output_folder, 'Figure6_TimeDomain.fig'));
+    
+    %% Figure 7: 幅度直方图
      figure('Name', 'Jakes - Amplitude Histogram', 'NumberTitle', 'on');
      set(gcf, 'Position', [200, 100, 800, 600]);
      grid on; hold on;
@@ -348,10 +389,14 @@ function jakes_simulator_standalone()
      xlabel('幅度 r', 'FontSize', f_size);
      ylabel('概率密度 f_{|g|}(r)', 'FontSize', f_size);
      legend({'仿真直方图', '理论Rayleigh分布'}, 'FontSize', f_size-2);
-     title('幅度分布验证 - 瑞利分布', 'FontSize', f_size);
-     xlim([0, max(abs_g)*1.1]);
-     
-     %% Figure 8: 多普勒频谱（核心验证）
+    title('幅度分布验证 - 瑞利分布', 'FontSize', f_size);
+    xlim([0, max(abs_g)*1.1]);
+    
+    % 保存 Figure 7
+    saveas(gcf, fullfile(output_folder, 'Figure7_AmplitudeHistogram.png'));
+    saveas(gcf, fullfile(output_folder, 'Figure7_AmplitudeHistogram.fig'));
+    
+    %% Figure 8: 多普勒频谱（核心验证）
      figure('Name', 'Jakes - Doppler Spectrum', 'NumberTitle', 'on');
      set(gcf, 'Position', [200, 100, 800, 600]);
      grid on; hold on;
@@ -387,8 +432,12 @@ function jakes_simulator_standalone()
     ylim([-40, 5]);
     legend({'仿真结果', '理论U型频谱'}, 'FontSize', f_size-2);
     title('多普勒功率谱密度 - U型频谱验证', 'FontSize', f_size);
-     
-     %% Figure 9: 自相关函数J₀验证（详细视图）
+    
+    % 保存 Figure 8
+    saveas(gcf, fullfile(output_folder, 'Figure8_DopplerSpectrum.png'));
+    saveas(gcf, fullfile(output_folder, 'Figure8_DopplerSpectrum.fig'));
+    
+    %% Figure 9: 自相关函数J₀验证（详细视图）
      figure('Name', 'Jakes - Autocorrelation J0 Verification', 'NumberTitle', 'on');
      set(gcf, 'Position', [200, 100, 800, 600]);
      grid on; hold on;
@@ -405,8 +454,12 @@ function jakes_simulator_standalone()
     legend({'理论 J_0(2\pi f_d \tau)', '仿真结果'}, ...
            'FontSize', f_size-2);
     title('自相关函数J₀验证（详细视图）', 'FontSize', f_size);
-     
-     %% Figure 10: 实部/虚部分布
+    
+    % 保存 Figure 9
+    saveas(gcf, fullfile(output_folder, 'Figure9_J0Verification.png'));
+    saveas(gcf, fullfile(output_folder, 'Figure9_J0Verification.fig'));
+    
+    %% Figure 10: 实部/虚部分布
      figure('Name', 'Jakes - Real/Imaginary Distribution', 'NumberTitle', 'on');
      set(gcf, 'Position', [200, 100, 1200, 600]);
      
@@ -459,10 +512,15 @@ function jakes_simulator_standalone()
      xlabel('虚部 $g_s$', 'Interpreter', 'latex', 'FontSize', f_size);
      ylabel('概率密度 $f_{g_s}(x)$', 'Interpreter', 'latex', 'FontSize', f_size);
      legend({'仿真直方图', '理论高斯分布'}, 'FontSize', f_size-2);
-     title('虚部分布验证', 'FontSize', f_size);
-     grid on;
-     
-     fprintf('已生成10个验证图表！\n');
- end
+    title('虚部分布验证', 'FontSize', f_size);
+    grid on;
+    
+    % 保存 Figure 10
+    saveas(gcf, fullfile(output_folder, 'Figure10_RealImaginaryDist.png'));
+    saveas(gcf, fullfile(output_folder, 'Figure10_RealImaginaryDist.fig'));
+    
+    fprintf('已生成10个验证图表！\n');
+    fprintf('所有图表已保存到文件夹: %s\n', output_folder);
+end
  
  

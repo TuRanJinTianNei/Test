@@ -148,8 +148,8 @@ title('OFDM子载波频率幅度');
 figure(2);
 plot(0:IFFT_bin_length-1, (180/pi)*angle(IFFT_modulation(2,1:IFFT_bin_length)), 'go')
 hold on
-stem(0:carriers-1, (180/pi)*angle(IFFT_modulation(2,1:carriers)),'b*-');
-stem(0:conjugate_carriers-1, (180/pi)*angle(IFFT_modulation(2,1:conjugate_carriers)),'b*-');
+stem(carriers-1, (180/pi)*angle(IFFT_modulation(2,carriers)),'b*-');
+stem(conjugate_carriers-1, (180/pi)*angle(IFFT_modulation(2,conjugate_carriers)),'b*-');
 axis ([0 IFFT_bin_length -200 +200])
 grid on
 ylabel('Phase (degrees)')
@@ -740,6 +740,23 @@ end
 axis([9 31 y_min y_max])
 
 toc
+
+%===============================================================================
+% 确保所有Figure窗口显示
+%===============================================================================
+% 显示当前figure窗口并刷新所有图形
+drawnow;  % 强制刷新所有图形窗口
+shg;      % 显示当前图形窗口（Show Graph）
+
+% 激活所有已创建的figure窗口，确保它们都可见
+for figNum = 1:13
+    if ishghandle(figNum)
+        figure(figNum);
+        drawnow;
+    end
+end
+
+fprintf('\n所有Figure窗口已创建并显示。\n');
 %===============================================================================
 % 文件结束
 %===============================================================================

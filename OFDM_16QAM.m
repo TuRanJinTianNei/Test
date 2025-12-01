@@ -1,114 +1,114 @@
 % ============================================================================
-% ÎÄ¼þÃû: test1.m
-% ¹¦ÄÜ: OFDMÏµÍ³ÍêÕû·ÂÕæ³ÌÐò£¨Ö÷³ÌÐò£©
-% ÃèÊö: 
-%   1. ÊµÏÖÍêÕûµÄOFDMÏµÍ³Á´Â·£º·¢ËÍ¶Ë£¨16QAMµ÷ÖÆ¡¢IFFT¡¢CP¡¢¼Ó´°£©¡ú 
-%      ÐÅµÀ£¨AWGN£©¡ú ½ÓÊÕ¶Ë£¨È¥CP¡¢FFT¡¢16QAM½âµ÷£©
-%   2. Éú³É13¸öFigure½øÐÐ¿ÉÊÓ»¯·ÖÎö£¬°üÀ¨£º
-%      - µ¥·ûºÅ·ÖÎöÓë¿ÉÊÓ»¯£¨Figure 1-5£©
-%      - Ö¡¼¶¡¢´®ÐÐÐÅºÅÓëÆµÆ×·ÖÎö£¨Figure 6-8£©
-%      - ÐÅµÀÓ°ÏìÓë½ÓÊÕ¶ËÆÀ¹À£¨Figure 12-13£©
-%      - ½âµ÷ÅÐ¾öÓëÐÔÄÜ£¨Figure 9-11£¬°üº¬BER-SNRÇúÏß£©
-%   3. ¼ÆËãBER-SNRÇúÏß£¨10-30dB£¬²½½ø2dB£©
-%   4. ÔÚ15dB SNRÏÂ½øÐÐÏêÏ¸·ÖÎö£¬ÆäËûSNR½öÓÃÓÚBER¼ÆËã
+% ï¿½Ä¼ï¿½ï¿½ï¿½: test1.m
+% ï¿½ï¿½ï¿½ï¿½: OFDMÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+% ï¿½ï¿½ï¿½ï¿½: 
+%   1. Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½OFDMÏµÍ³ï¿½ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½Í¶Ë£ï¿½16QAMï¿½ï¿½ï¿½Æ¡ï¿½IFFTï¿½ï¿½CPï¿½ï¿½ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½ 
+%      ï¿½Åµï¿½ï¿½ï¿½AWGNï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Õ¶Ë£ï¿½È¥CPï¿½ï¿½FFTï¿½ï¿½16QAMï¿½ï¿½ï¿½ï¿½ï¿½
+%   2. ï¿½ï¿½ï¿½ï¿½13ï¿½ï¿½Figureï¿½ï¿½ï¿½Ð¿ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+%      - ï¿½ï¿½ï¿½ï¿½ï¿½Å·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½Figure 1-5ï¿½ï¿½
+%      - Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½ï¿½ï¿½Æµï¿½×·ï¿½ï¿½ï¿½ï¿½ï¿½Figure 6-8ï¿½ï¿½
+%      - ï¿½Åµï¿½Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Figure 12-13ï¿½ï¿½
+%      - ï¿½ï¿½ï¿½ï¿½Ð¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü£ï¿½Figure 9-11ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½BER-SNRï¿½ï¿½ï¿½ß£ï¿½
+%   3. ï¿½ï¿½ï¿½ï¿½BER-SNRï¿½ï¿½ï¿½ß£ï¿½10-30dBï¿½ï¿½ï¿½ï¿½ï¿½ï¿½2dBï¿½ï¿½
+%   4. ï¿½ï¿½15dB SNRï¿½Â½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SNRï¿½ï¿½ï¿½ï¿½ï¿½ï¿½BERï¿½ï¿½ï¿½ï¿½
 % ============================================================================
 
 tic
 clc;
 clear all;
 close all;
-%===================== Figure Ë÷ÒýËµÃ÷ =====================
+%===================== Figure ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½ =====================
 %
-% ¡¾Ò»¡¿µ¥·ûºÅ·ÖÎöÓë¿ÉÊÓ»¯
-%   Figure 1 : IFFT ¸÷Æµµã·ù¶È
-%   Figure 2 : IFFT ¸÷ÆµµãÏàÎ»
-%   Figure 3 : µ¥·ûºÅÊ±Óò£¨Î´¼Ó CP/ºó×º£©
-%   Figure 4 : µ¥·ûºÅÊ±Óò£¨¼Ó CP Óëºó×º£©
-%   Figure 5 : µ¥·ûºÅÊ±Óò£¨¼Ó´°ºó£©
+% ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó»ï¿½
+%   Figure 1 : IFFT ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½
+%   Figure 2 : IFFT ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½Î»
+%   Figure 3 : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Î´ï¿½ï¿½ CP/ï¿½ï¿½×ºï¿½ï¿½
+%   Figure 4 : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ò£¨¼ï¿½ CP ï¿½ï¿½ï¿½×ºï¿½ï¿½
+%   Figure 5 : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ò£¨¼Ó´ï¿½ï¿½ï¿½
 %
-% ¡¾¶þ¡¿Ö¡¼¶¡¢´®ÐÐÐÅºÅÓëÆµÆ×·ÖÎö
-%   Figure 6 : ´®ÐÐ·¢ËÍÊ±Óò¶Ô±È£¨ÉÏ£ºÖð·ûºÅ£»ÏÂ£ºÖ¡¼¶+Ä©Î²ºó×º£©
-%   Figure 7 : ¼Ó´°Ç°ºó¾Ö²¿´°¿ÚÊ±Óò¶Ô±È£¨Óë Figure 12 ÏàÍ¬·¶Î§£©
-%   Figure 8 : ¼Ó´°Ç°ºó¾Ö²¿´°¿ÚÆµÓò¶Ô±È£¨Óë Figure 12 ÏàÍ¬·¶Î§£©
-%   ×¢£ºFigure 7 Õ¹Ê¾¼Ó´°Ç°ºóÐÅºÅÔÚ¾Ö²¿´°¿ÚÄÚµÄÊ±Óò²¨ÐÎ£¬±ãÓÚ¹Û²ì´°º¯Êý¶ÔÐÅºÅ±ßÔµµÄÆ½»¬×÷ÓÃ¡£
-%       Figure 8 Õ¹Ê¾¼Ó´°Ç°ºóÐÅºÅÔÚ¾Ö²¿´°¿ÚÄÚµÄ·ù¶ÈÆ×£¨dBÖµ£©£¬ÓÃÓÚ¶Ô±È¼Ó´°¶ÔÅÔ°êµÄÒÖÖÆÐ§¹û¡£
-%       Á½Õß¾ùÊ¹ÓÃÓë Figure 12 ÏàÍ¬µÄ¾Ö²¿´°¿Ú½øÐÐ·ÖÎö¡£×ÝÖáÁãµãÊÇÈÎÒâ²Î¿¼¡£
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½ï¿½ï¿½Æµï¿½×·ï¿½ï¿½ï¿½
+%   Figure 6 : ï¿½ï¿½ï¿½Ð·ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ô±È£ï¿½ï¿½Ï£ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½Â£ï¿½Ö¡ï¿½ï¿½+Ä©Î²ï¿½ï¿½×ºï¿½ï¿½
+%   Figure 7 : ï¿½Ó´ï¿½Ç°ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ô±È£ï¿½ï¿½ï¿½ Figure 12 ï¿½ï¿½Í¬ï¿½ï¿½Î§ï¿½ï¿½
+%   Figure 8 : ï¿½Ó´ï¿½Ç°ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½Ô±È£ï¿½ï¿½ï¿½ Figure 12 ï¿½ï¿½Í¬ï¿½ï¿½Î§ï¿½ï¿½
+%   ×¢ï¿½ï¿½Figure 7 Õ¹Ê¾ï¿½Ó´ï¿½Ç°ï¿½ï¿½ï¿½Åºï¿½ï¿½Ú¾Ö²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½Ê±ï¿½ï¿½ï¿½Î£ï¿½ï¿½ï¿½ï¿½Ú¹Û²ì´°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÅºÅ±ï¿½Ôµï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¡ï¿½
+%       Figure 8 Õ¹Ê¾ï¿½Ó´ï¿½Ç°ï¿½ï¿½ï¿½Åºï¿½ï¿½Ú¾Ö²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÚµÄ·ï¿½ï¿½ï¿½ï¿½×£ï¿½dBÖµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶Ô±È¼Ó´ï¿½ï¿½ï¿½ï¿½Ô°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½
+%       ï¿½ï¿½ï¿½ß¾ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ Figure 12 ï¿½ï¿½Í¬ï¿½Ä¾Ö²ï¿½ï¿½ï¿½ï¿½Ú½ï¿½ï¿½Ð·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¿ï¿½ï¿½ï¿½
 %
-% ¡¾Èý¡¿ÐÅµÀÓ°ÏìÓë½ÓÊÕ¶ËÆÀ¹À
-%   Figure 12: ¾Ö²¿´°¿ÚÊ±Óò¶Ô±È£¨º¬SNR/MSEÃüÁîÐÐ´òÓ¡£©
-%   Figure 13: ¾Ö²¿´°¿ÚË«±ßÆ×¶Ô±È
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½Ó°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¶ï¿½ï¿½ï¿½ï¿½ï¿½
+%   Figure 12: ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ô±È£ï¿½ï¿½ï¿½SNR/MSEï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½Ó¡ï¿½ï¿½
+%   Figure 13: ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Ë«ï¿½ï¿½ï¿½×¶Ô±ï¿½
 %
-% ¡¾ËÄ¡¿½âµ÷ÅÐ¾öÓëÐÔÄÜ
-%   Figure 9 : ½ÓÊÕ¶Ë16QAMÐÇ×ùÍ¼
-%   Figure 10: ±ÈÌØÁ÷·¢/ÊÕÇ°100Î»¶Ô±È
-%   Figure 11: BER-SNRÇúÏß£¨10-30dB£¬²½½ø2dB£©
+% ï¿½ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½ï¿½Ð¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+%   Figure 9 : ï¿½ï¿½ï¿½Õ¶ï¿½16QAMï¿½ï¿½ï¿½ï¿½Í¼
+%   Figure 10: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½Ç°100Î»ï¿½Ô±ï¿½
+%   Figure 11: BER-SNRï¿½ï¿½ï¿½ß£ï¿½10-30dBï¿½ï¿½ï¿½ï¿½ï¿½ï¿½2dBï¿½ï¿½
 %
 %==========================================================
 %===============================================================================
-% ¡¾ÏµÍ³²ÎÊýÅäÖÃ¡¿
+% ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¡ï¿½
 %===============================================================================
-% ËµÃ÷£ºÒÔÏÂ²ÎÊý¶¨ÒåÁËOFDMÏµÍ³µÄºËÐÄÅäÖÃ£¬¿É¸ù¾ÝÊµ¼ÊÐèÇóµ÷Õû
+% Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½OFDMÏµÍ³ï¿½Äºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½É¸ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-carrier_count=200;                 % ÓÐÐ§Êý¾Ý×ÓÔØ²¨Êý£¨²»º¬¾µÏñÓë¿Õ×ÓÔØ²¨£©
-symbols_per_frame=50;              % Ã¿Ö¡ OFDM ·ûºÅÊý
-total_symbols=1000;                % ×Ü¹²Òª´«ÊäµÄ OFDM ·ûºÅÊý
-symbols_per_carrier=total_symbols; % Îª¼æÈÝºóÐø¾ØÕó³ß´ç£¬ÑØÓÃÔ­±äÁ¿±íÊ¾"×Ü·ûºÅÊý"
-bits_per_symbol=4;                 % Ã¿¸ö×ÓÔØ²¨³ÐÔØµÄ±ÈÌØÊý£¨4=16QAM£©
+carrier_count=200;                 % ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½
+symbols_per_frame=50;              % Ã¿Ö¡ OFDM ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+total_symbols=1000;                % ï¿½Ü¹ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ OFDM ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+symbols_per_carrier=total_symbols; % Îªï¿½ï¿½ï¿½Ýºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß´ç£¬ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾"ï¿½Ü·ï¿½ï¿½ï¿½ï¿½ï¿½"
+bits_per_symbol=4;                 % Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ØµÄ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½4=16QAMï¿½ï¿½
 
-% IFFT/FFT²ÎÊý
-IFFT_bin_length=512;               % IFFT µãÊý£¨°üº¬ÓÐÐ§¡¢¿Õ¡¢¾µÏñÓëDC£©
+% IFFT/FFTï¿½ï¿½ï¿½ï¿½
+IFFT_bin_length=512;               % IFFT ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½Õ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½DCï¿½ï¿½
 
-% ±£»¤¼ä¸ô²ÎÊý
-PrefixRatio=1/4;                   % Ñ­»·Ç°×º±ÈÀý£¨GI/N£©£¬ÀýÈç1/4±íÊ¾GI=N/4
-GI=PrefixRatio*IFFT_bin_length;    % ±£»¤Ç°×º³¤¶È£¨Ñù±¾Êý£©
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+PrefixRatio=1/4;                   % Ñ­ï¿½ï¿½Ç°×ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GI/Nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½1/4ï¿½ï¿½Ê¾GI=N/4
+GI=PrefixRatio*IFFT_bin_length;    % ï¿½ï¿½ï¿½ï¿½Ç°×ºï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-% ¼Ó´°²ÎÊý£¨LTE·ç¸ñ£©
+% ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½LTEï¿½ï¿½ï¿½
 % ============================================================================
-% LTEÏÂÐÐÁ´Â·OFDMÊ±Óò·ûºÅ¼Ó´°Ô­Àí£º
-% 1. Ä¿µÄ£ºÒÖÖÆ·ûºÅ±ßÔµµÄ¶¸ÇÍÌø±ä£¬¼õÉÙ´øÍâ·øÉä£¨ÆµÆ×Ð¹Â¶£©
-% 2. ÖØµþ»úÖÆ£º·ûºÅÆ´½ÓÊ±´æÔÚ¿É¿ØµÄÖØµþ£¬ÖØµþÇøÓòÏÞÖÆÔÚÑ­»·Ç°×º£¨CP£©ÄÚ
-% 3. ²»Ó°ÏìÓÐÐ§Êý¾Ý£ºÖØµþÖ»ÔÚCPÄÚ£¬½ÓÊÕ¶ËÈ¥³ýCPÊ±²»ÊÜÓ°Ïì
+% LTEï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â·OFDMÊ±ï¿½ï¿½ï¿½ï¿½Å¼Ó´ï¿½Ô­ï¿½ï¿½ï¿½ï¿½
+% 1. Ä¿ï¿½Ä£ï¿½ï¿½ï¿½ï¿½Æ·ï¿½ï¿½Å±ï¿½Ôµï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä£¬ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½ï¿½ï¿½ä£¨Æµï¿½ï¿½Ð¹Â¶ï¿½ï¿½
+% 2. ï¿½Øµï¿½ï¿½ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½Æ´ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Ú¿É¿Øµï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½Ç°×ºï¿½ï¿½CPï¿½ï¿½ï¿½ï¿½
+% 3. ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½Ý£ï¿½ï¿½Øµï¿½Ö»ï¿½ï¿½CPï¿½Ú£ï¿½ï¿½ï¿½ï¿½Õ¶ï¿½È¥ï¿½ï¿½CPÊ±ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½
 % ============================================================================
-beta=1/16;                         % ¼Ó´°¹ö½µÏµÊý£¨¹ý¶É´øÕ¼±È£¬Ô½Ð¡¹ý¶ÉÔ½¶Ì£©
-GIP=beta*(IFFT_bin_length+GI);     % ÓÒ¶Ëºó×º³¤¶È£ºÅäºÏ´°µÄÎ²²¿¹ý¶É
-GIP=min(GIP, GI);                  % LTEÒªÇó£ººó×º³¤¶È²»³¬¹ýCP³¤¶È£¬È·±£ÖØµþÇøÓòÔÚCPÄÚ
-GIP=floor(GIP);                    % È·±£ÎªÕûÊý
+beta=1/16;                         % ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É´ï¿½Õ¼ï¿½È£ï¿½Ô½Ð¡ï¿½ï¿½ï¿½ï¿½Ô½ï¿½Ì£ï¿½
+GIP=beta*(IFFT_bin_length+GI);     % ï¿½Ò¶Ëºï¿½×ºï¿½ï¿½ï¿½È£ï¿½ï¿½ï¿½Ï´ï¿½ï¿½ï¿½Î²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+GIP=min(GIP, GI);                  % LTEÒªï¿½ó£ººï¿½×ºï¿½ï¿½ï¿½È²ï¿½ï¿½ï¿½ï¿½ï¿½CPï¿½ï¿½ï¿½È£ï¿½È·ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CPï¿½ï¿½
+GIP=floor(GIP);                    % È·ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½
 
-% ·ûºÅ½»½ç´¦·ù¶ÈÎÊÌâ½â¾ö·½°¸£¨LTE±ê×¼·½·¨£©
+% ï¿½ï¿½ï¿½Å½ï¿½ï¿½ç´¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½LTEï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 % ============================================================================
-% LTE·½·¨£ºÊ¹ÓÃÉýÓàÏÒ´°Æ½»¬·ûºÅ±ßÔµ£¬·ûºÅÆ´½ÓÊ±ÔÚCP·¶Î§ÄÚÖØµþÏà¼Ó
-% - Ã¿¸ö·ûºÅ½á¹¹£º[CP(GI) | Ö÷Ìå(N) | ºó×º(GIP)]
-% - ÖØµþÇøÓò£ºµ±Ç°·ûºÅµÄºó×º(GIP)ÓëÏÂÒ»¸ö·ûºÅµÄCPÇ°GIP¸öÑù±¾ÖØµþ
-% - ÖØµþÏà¼Ó£ºÔÚÖØµþÇøÓò½«Á½¸ö·ûºÅµÄ·ù¶ÈÏà¼Ó£¬È·±£Æ½»¬¹ý¶É
-% - ½ÓÊÕ¶Ë£ºÈ¥³ýCPÊ±Ö»È¡Ö÷Ìå²¿·Ö£¬²»ÊÜÖØµþÓ°Ïì
+% LTEï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò´ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½Å±ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ´ï¿½ï¿½Ê±ï¿½ï¿½CPï¿½ï¿½Î§ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½
+% - Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Å½á¹¹ï¿½ï¿½[CP(GI) | ï¿½ï¿½ï¿½ï¿½(N) | ï¿½ï¿½×º(GIP)]
+% - ï¿½Øµï¿½ï¿½ï¿½ï¿½ò£ºµï¿½Ç°ï¿½ï¿½ï¿½ÅµÄºï¿½×º(GIP)ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½CPÇ°GIPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½
+% - ï¿½Øµï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÅµÄ·ï¿½ï¿½ï¿½ï¿½ï¿½Ó£ï¿½È·ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+% - ï¿½ï¿½ï¿½Õ¶Ë£ï¿½È¥ï¿½ï¿½CPÊ±Ö»È¡ï¿½ï¿½ï¿½å²¿ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½Ó°ï¿½ï¿½
 % ============================================================================
-solution_method = 3;               % Ê¹ÓÃLTE±ê×¼·½·¨£ºÖØµþÏà¼Ó£¨·½°¸3£©
+solution_method = 3;               % Ê¹ï¿½ï¿½LTEï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ï¿½3ï¿½ï¿½
 
-% ÐÅµÀ²ÎÊý
-targetSNRdB = 15;                  % Ä¿±êÐÅÔë±È£¨dB£©£¬ÓÃÓÚ15dBÏÂµÄÏêÏ¸·ÖÎö
+% ï¿½Åµï¿½ï¿½ï¿½ï¿½ï¿½
+targetSNRdB = 15;                  % Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È£ï¿½dBï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½15dBï¿½Âµï¿½ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½
 
 %===============================================================================
-% ¡¾·¢ËÍ¶Ë´¦ÀíÁ÷³Ì¡¿
+% ï¿½ï¿½ï¿½ï¿½ï¿½Í¶Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¡ï¿½
 %===============================================================================
 
 %------------------------------------------------------------------------------
-% ²½Öè1: Ëæ»ú±ÈÌØÁ÷Éú³É
+% ï¿½ï¿½ï¿½ï¿½1: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 %------------------------------------------------------------------------------
 baseband_out_length=carrier_count*symbols_per_carrier*bits_per_symbol;
-% Ê¹ÓÃÐÂËæ»úÊýÉú³ÉÆ÷£¬È·±£Ã¿´ÎÔËÐÐ²»Í¬£»ÈçÐè¸´ÏÖÊµÑé¿É¸ÄÎª rng(fixed_seed)
+% Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½è¸´ï¿½ï¿½Êµï¿½ï¿½É¸ï¿½Îª rng(fixed_seed)
 rng('default'); rng('shuffle');
 baseband_out = randi([0 1], 1, baseband_out_length);
 
 %------------------------------------------------------------------------------
-% ²½Öè2: 16QAMµ÷ÖÆ
+% ï¿½ï¿½ï¿½ï¿½2: 16QAMï¿½ï¿½ï¿½ï¿½
 %------------------------------------------------------------------------------
 complex_carrier_matrix=qam16(baseband_out);
 complex_carrier_matrix=reshape(complex_carrier_matrix',carrier_count,symbols_per_carrier)';
 
 %------------------------------------------------------------------------------
-% ²½Öè3: ÆµÓò×ÓÔØ²¨Ó³Éä£¨¹¹Ôì°£¶ûÃ×ÌØ¹²éî¶Ô³Æ£¬Ê¹IFFTÊä³öÎªÊµÐÅºÅ£©
+% ï¿½ï¿½ï¿½ï¿½3: Æµï¿½ï¿½ï¿½ï¿½ï¿½Ø²ï¿½Ó³ï¿½ä£¨ï¿½ï¿½ï¿½ì°£ï¿½ï¿½ï¿½ï¿½ï¿½Ø¹ï¿½ï¿½ï¿½Ô³Æ£ï¿½Ê¹IFFTï¿½ï¿½ï¿½ÎªÊµï¿½ÅºÅ£ï¿½
 %------------------------------------------------------------------------------
-% ×ÓÔØ²¨Ë÷Òý¼ÆËã£º½øÐÐ×ÓÔØ²¨¹²éîÓ³Éä£¬Ê¹µÃOFDM·ûºÅ¾­¹ýIFFTÖ®ºóÊÇÊµÐÅºÅ
+% ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã£ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½Ó³ï¿½ä£¬Ê¹ï¿½ï¿½OFDMï¿½ï¿½ï¿½Å¾ï¿½ï¿½ï¿½IFFTÖ®ï¿½ï¿½ï¿½ï¿½Êµï¿½Åºï¿½
 carriers=(1:carrier_count)+(floor(IFFT_bin_length/4)-floor(carrier_count/2));
 conjugate_carriers=IFFT_bin_length-carriers+2; 
 
@@ -117,138 +117,138 @@ IFFT_modulation(:,carriers)=complex_carrier_matrix;
 IFFT_modulation(:,conjugate_carriers)=conj(complex_carrier_matrix);
 
 %------------------------------------------------------------------------------
-% ²½Öè4: IFFT±ä»»£¨ÆµÓò ¡ú Ê±Óò£©
+% ï¿½ï¿½ï¿½ï¿½4: IFFTï¿½ä»»ï¿½ï¿½Æµï¿½ï¿½ ï¿½ï¿½ Ê±ï¿½ï¿½
 %------------------------------------------------------------------------------
-% Figure 1: IFFT¸÷ÆµµãµÄ·ù¶È£¨Õ¹Ê¾¼¤»îµÄ×ÓÔØ²¨ÓëÆä¹²éî¾µÏñµÄ·ù¶È·Ö²¼£©
-% - ¿ÉÖ±¹Û¿´µ½ÔØ²¨·ÖÅäÓëÎ´ÓÃÆµµã£¨·ù¶ÈÎª0£©£¬Àí½âÆµÓòÊäÈë½á¹¹
+% Figure 1: IFFTï¿½ï¿½Æµï¿½ï¿½Ä·ï¿½ï¿½È£ï¿½Õ¹Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ä¹²ï¿½î¾µï¿½ï¿½Ä·ï¿½ï¿½È·Ö²ï¿½ï¿½ï¿½
+% - ï¿½ï¿½Ö±ï¿½Û¿ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î´ï¿½ï¿½Æµï¿½ã£¨ï¿½ï¿½ï¿½ï¿½Îª0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹¹
 figure(1);
 stem(0:IFFT_bin_length-1, abs(IFFT_modulation(2,1:IFFT_bin_length)),'b*-')
 grid on
 axis ([0 IFFT_bin_length -0.5 4.5]);
 ylabel('Magnitude');
 xlabel('IFFT Bin');
-title('OFDM×ÓÔØ²¨ÆµÂÊ·ù¶È');
+title('OFDMï¿½ï¿½ï¿½Ø²ï¿½Æµï¿½Ê·ï¿½ï¿½ï¿½');
  
-% Figure 2: IFFT¸÷ÆµµãµÄÏàÎ»£¨¶È£©
-% - ÌåÏÖ¹²éîÓ³Éä´øÀ´µÄÏàÎ»¶Ô³ÆÐÔ£¬ÑéÖ¤ÊµÖµÊ±ÓòÐÅºÅÌõ¼þ
+% Figure 2: IFFTï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½È£ï¿½
+% - ï¿½ï¿½ï¿½Ö¹ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ô³ï¿½ï¿½Ô£ï¿½ï¿½ï¿½Ö¤ÊµÖµÊ±ï¿½ï¿½ï¿½Åºï¿½ï¿½ï¿½ï¿½ï¿½
 figure(2);
 plot(0:IFFT_bin_length-1, (180/pi)*angle(IFFT_modulation(2,1:IFFT_bin_length)), 'go')
 hold on
-stem(0:carriers-1, (180/pi)*angle(IFFT_modulation(2,1:carriers)),'b*-');
-stem(0:conjugate_carriers-1, (180/pi)*angle(IFFT_modulation(2,1:conjugate_carriers)),'b*-');
+stem(carriers-1, (180/pi)*angle(IFFT_modulation(2,carriers)),'b*-');
+stem(conjugate_carriers-1, (180/pi)*angle(IFFT_modulation(2,conjugate_carriers)),'b*-');
 axis ([0 IFFT_bin_length -200 +200])
 grid on
 ylabel('Phase (degrees)')
 xlabel('IFFT Bin')
-title('OFDM×ÓÔØ²¨ÏàÎ»')
+title('OFDMï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½Î»')
 
 %------------------------------------------------------------------------------
-% ²½Öè5: IFFT±ä»»£¬µÃµ½Ê±ÓòOFDM·ûºÅ£¨Î´¼Ó±£»¤¼ä¸ô£©
+% ï¿½ï¿½ï¿½ï¿½5: IFFTï¿½ä»»ï¿½ï¿½ï¿½Ãµï¿½Ê±ï¿½ï¿½OFDMï¿½ï¿½ï¿½Å£ï¿½Î´ï¿½Ó±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 %------------------------------------------------------------------------------
 signal_after_IFFT=ifft(IFFT_modulation,IFFT_bin_length,2);
 time_wave_matrix=signal_after_IFFT;
 
-% Figure 3: µ¥¸öOFDM·ûºÅ£¨Î´¼ÓÑ­»·Ç°×º/ºó×º£©µÄÊ±Óò²¨ÐÎ
-% - Õ¹Ê¾IFFTÊä³öµÄÒ»¸ö·ûºÅÖÜÆÚ°üÂçÓë·ù¶È·¶Î§
+% Figure 3: ï¿½ï¿½ï¿½ï¿½OFDMï¿½ï¿½ï¿½Å£ï¿½Î´ï¿½ï¿½Ñ­ï¿½ï¿½Ç°×º/ï¿½ï¿½×ºï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
+% - Õ¹Ê¾IFFTï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½Î§
 figure(3)
 plot(0:IFFT_bin_length-1,time_wave_matrix(2,:));
 axis([0 IFFT_bin_length -0.2 0.2]);
 grid on
 ylabel('Amplitude');
 xlabel('Time');
-title('OFDMÊ±ÓòÐÅºÅ£¬µ¥·ûºÅÖÜÆÚ');
+title('OFDMÊ±ï¿½ï¿½ï¿½ÅºÅ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
 
 %------------------------------------------------------------------------------
-% ²½Öè6: Ìí¼ÓÑ­»·Ç°×º(CP)Óëºó×º
+% ï¿½ï¿½ï¿½ï¿½6: ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½Ç°×º(CP)ï¿½ï¿½ï¿½×º
 %------------------------------------------------------------------------------
-% CP×÷ÓÃ£º¶Ô¿¹¶à¾¶¸ÉÈÅ£¬±£³Ö·ûºÅ¼äÕý½»ÐÔ
-% ºó×º×÷ÓÃ£ºÓÃÓÚ¼Ó´°µÄÆ½»¬¹ý¶É£¬½µµÍÆµÆ×ÅÔ°ê
+% CPï¿½ï¿½ï¿½Ã£ï¿½ï¿½Ô¿ï¿½ï¿½à¾¶ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Å¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+% ï¿½ï¿½×ºï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½Ú¼Ó´ï¿½ï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Ô°ï¿½
 XX=zeros(symbols_per_carrier,IFFT_bin_length+GI+GIP);
 for k=1:symbols_per_carrier
-    % ·ûºÅÖ÷Ìå²¿·Ö£¨ÖÐ¼ä£©
+    % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å²¿ï¿½Ö£ï¿½ï¿½Ð¼ä£©
     for i=1:IFFT_bin_length
         XX(k,i+GI)=signal_after_IFFT(k,i);
     end
-    % Ñ­»·Ç°×º£º½«·ûºÅÎ²²¿¸´ÖÆµ½¿ªÍ·
+    % Ñ­ï¿½ï¿½Ç°×ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î²ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Í·
     for i=1:GI
         XX(k,i)=signal_after_IFFT(k,i+IFFT_bin_length-GI);
     end
-    % ºó×º£º½«·ûºÅÍ·²¿¸´ÖÆµ½Ä©Î²£¨ÓÃÓÚ´°µÄÓÒ²à¹ý¶É£©
+    % ï¿½ï¿½×ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½Ä©Î²ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½É£ï¿½
     for j=1:GIP
          XX(k,IFFT_bin_length+GI+j)=signal_after_IFFT(k,j);
     end
 end  
 time_wave_matrix_cp=XX;
 
-% Figure 4: µ¥¸öOFDM·ûºÅÌí¼ÓÑ­»·Ç°×º(CP)Óëºó×ººóµÄÊ±Óò²¨ÐÎ
-% - ×ó²àCP¡¢ÓÒ¶Ëºó×º£¨ÓÃÓÚ´°¿Ú¹ý¶É£©£¬¹Û²ì±ßÑØÑÓÍØ
+% Figure 4: ï¿½ï¿½ï¿½ï¿½OFDMï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½Ç°×º(CP)ï¿½ï¿½ï¿½×ºï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½
+% - ï¿½ï¿½ï¿½CPï¿½ï¿½ï¿½Ò¶Ëºï¿½×ºï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½Ú¹ï¿½ï¿½É£ï¿½ï¿½ï¿½ï¿½Û²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 figure(4);
 plot(0:size(time_wave_matrix_cp,2)-1, time_wave_matrix_cp(2,:));
 axis([0, size(time_wave_matrix_cp,2), -0.2, 0.2]);
 grid on;
 ylabel('Amplitude');
 xlabel('Time');
-title('OFDMÊ±ÓòÐÅºÅ£¨º¬Ñ­»·Ç°×º£©£¬µ¥·ûºÅÖÜÆÚ');
+title('OFDMÊ±ï¿½ï¿½ï¿½ÅºÅ£ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½Ç°×ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
 
 %------------------------------------------------------------------------------
-% ²½Öè7: OFDM·ûºÅ¼Ó´°´¦Àí£¨LTE·ç¸ñ£©
+% ï¿½ï¿½ï¿½ï¿½7: OFDMï¿½ï¿½ï¿½Å¼Ó´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½LTEï¿½ï¿½ï¿½
 %------------------------------------------------------------------------------
-% LTEÔ­Àí£ºÊ¹ÓÃÉýÓàÏÒ´°Æ½»¬·ûºÅ±ßÔµ£¬ÒÖÖÆ·ûºÅ±ßÔµµÄ¶¸ÇÍÌø±ä£¬¼õÉÙ´øÍâ·øÉä
-% ´°º¯Êý¸²¸Ç·¶Î§£º[CP(GI) | Ö÷Ìå(N)]£¬×Ü³¤¶ÈÎª N+GI
-% ´°º¯ÊýÔÚ×ó±ßÔµ£¨CP¿ªÊ¼£©ºÍÓÒ±ßÔµ£¨Ö÷Ìå½áÊø£©Ìá¹©Æ½»¬¹ý¶É
-% ºó×º²¿·Ö£¨GIP£©ÓÃÓÚÓëÏÂÒ»¸ö·ûºÅµÄCPÖØµþ£¬ÊµÏÖÆ½»¬Æ´½Ó
+% LTEÔ­ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò´ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½Å±ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½Æ·ï¿½ï¿½Å±ï¿½Ôµï¿½Ä¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä£¬ï¿½ï¿½ï¿½Ù´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Î§ï¿½ï¿½[CP(GI) | ï¿½ï¿½ï¿½ï¿½(N)]ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½Îª N+GI
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôµï¿½ï¿½CPï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ò±ï¿½Ôµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á¹©Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+% ï¿½ï¿½×ºï¿½ï¿½ï¿½Ö£ï¿½GIPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½CPï¿½Øµï¿½ï¿½ï¿½Êµï¿½ï¿½Æ½ï¿½ï¿½Æ´ï¿½ï¿½
 windowed_time_wave_matrix_cp=zeros(symbols_per_carrier,IFFT_bin_length+GI+GIP);
 
-% Éú³ÉÉýÓàÏÒ´°º¯Êý£¨¸²¸ÇCP+Ö÷Ìå²¿·Ö£¬³¤¶ÈÎªN+GI£©
-% ×¢Òâ£ºrcoswindow·µ»ØµÄ³¤¶ÈÊÇ(1+beta)*(N+GI)£¬ÎÒÃÇÐèÒªÖ»È¡Ç°N+GI¸öÔªËØ
-rcos_win_full = rcoswindow(beta, IFFT_bin_length+GI);  % ÁÐÏòÁ¿£¬³¤¶È = (1+beta)*(N+GI)
-rcos_win = rcos_win_full(1:IFFT_bin_length+GI)';  % Ö»È¡Ç°N+GI¸öÔªËØ£¬×ªÖÃÎªÐÐÏòÁ¿
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CP+ï¿½ï¿½ï¿½å²¿ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ÎªN+GIï¿½ï¿½
+% ×¢ï¿½â£ºrcoswindowï¿½ï¿½ï¿½ØµÄ³ï¿½ï¿½ï¿½ï¿½ï¿½(1+beta)*(N+GI)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÖ»È¡Ç°N+GIï¿½ï¿½Ôªï¿½ï¿½
+rcos_win_full = rcoswindow(beta, IFFT_bin_length+GI);  % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ = (1+beta)*(N+GI)
+rcos_win = rcos_win_full(1:IFFT_bin_length+GI)';  % Ö»È¡Ç°N+GIï¿½ï¿½Ôªï¿½Ø£ï¿½×ªï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-% ¶ÔÃ¿¸ö·ûºÅ¼Ó´°
+% ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Å¼Ó´ï¿½
 for i = 1:symbols_per_carrier
-    % ·ûºÅ½á¹¹£º[CP(GI) | Ö÷Ìå(N) | ºó×º(GIP)]
-    % ´°º¯ÊýÓ¦ÓÃÓÚÇ° N+GI ¸öÑù±¾£¨CP+Ö÷Ìå£©
+    % ï¿½ï¿½ï¿½Å½á¹¹ï¿½ï¿½[CP(GI) | ï¿½ï¿½ï¿½ï¿½(N) | ï¿½ï¿½×º(GIP)]
+    % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½Ç° N+GI ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CP+ï¿½ï¿½ï¿½å£©
     windowed_time_wave_matrix_cp(i, 1:IFFT_bin_length+GI) = ...
         real(time_wave_matrix_cp(i, 1:IFFT_bin_length+GI)) .* rcos_win;
     
-    % ºó×º²¿·Ö£¨GIP¸öÑù±¾£©£º±£³ÖÔ­Öµ£¬ÓÃÓÚÓëÏÂÒ»¸ö·ûºÅµÄCPÖØµþ
-    % ×¢Òâ£ººó×º²¿·Ö²»¼Ó´°£¬ÒòÎªËü»áÓëÏÂÒ»¸ö·ûºÅµÄCPÖØµþÏà¼Ó
+    % ï¿½ï¿½×ºï¿½ï¿½ï¿½Ö£ï¿½GIPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½CPï¿½Øµï¿½
+    % ×¢ï¿½â£ºï¿½ï¿½×ºï¿½ï¿½ï¿½Ö²ï¿½ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½CPï¿½Øµï¿½ï¿½ï¿½ï¿½
     if GIP > 0
         windowed_time_wave_matrix_cp(i, IFFT_bin_length+GI+1:IFFT_bin_length+GI+GIP) = ...
             real(time_wave_matrix_cp(i, IFFT_bin_length+GI+1:IFFT_bin_length+GI+GIP));
     end
 end
 
-% Figure 5: ¼Ó´°ºóµÄµ¥¸öOFDM·ûºÅÊ±Óò²¨ÐÎ£¨º¬CP/ºó×º£©
-% - LTE·ç¸ñ£ºÉýÓàÏÒ´°Æ½»¬±ßÑØ£¬½µµÍÆµÆ×ÅÔ°ê
-% - ´°º¯ÊýÓ¦ÓÃÓÚCP+Ö÷Ìå²¿·Ö£¬ºó×º²¿·ÖÓÃÓÚÓëÏÂÒ»¸ö·ûºÅµÄCPÖØµþ
+% Figure 5: ï¿½Ó´ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½OFDMï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Î£ï¿½ï¿½ï¿½CP/ï¿½ï¿½×ºï¿½ï¿½
+% - LTEï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò´ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Ô°ï¿½
+% - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½CP+ï¿½ï¿½ï¿½å²¿ï¿½Ö£ï¿½ï¿½ï¿½×ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½CPï¿½Øµï¿½
 figure(5)
 plot(0:IFFT_bin_length-1+GI+GIP,windowed_time_wave_matrix_cp(2,:)); 
 axis([0, IFFT_bin_length-1+GI+GIP, -0.2, 0.2]);
 grid on;
 ylabel('Amplitude');
 xlabel('Time');
-title(sprintf('OFDMÊ±ÓòÐÅºÅ£¨LTE·ç¸ñ¼Ó´°£¬ÖØµþÇøÓòÏÞÖÆÔÚCPÄÚ£¬GIP=%d£©£¬µ¥·ûºÅÖÜÆÚ', GIP));
+title(sprintf('OFDMÊ±ï¿½ï¿½ï¿½ÅºÅ£ï¿½LTEï¿½ï¿½ï¿½Ó´ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CPï¿½Ú£ï¿½GIP=%dï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½', GIP));
 
 %------------------------------------------------------------------------------
-% ²½Öè8: Éú³É·¢ËÍÐÅºÅ£¬²¢´®±ä»»£¨°´Ö¡×éÖ¯£¬LTE·ç¸ñÖØµþÏà¼Ó£©
+% ï¿½ï¿½ï¿½ï¿½8: ï¿½ï¿½ï¿½É·ï¿½ï¿½ï¿½ï¿½ÅºÅ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ä»»ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½Ö¯ï¿½ï¿½LTEï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Ó£ï¿½
 %------------------------------------------------------------------------------
-% LTEÔ­Àí£º·ûºÅÆ´½ÓÊ±ÔÚCP·¶Î§ÄÚÖØµþÏà¼Ó£¬ÊµÏÖÆ½»¬¹ý¶É
-% Ö¡½á¹¹£ºÃ¿Ö¡°üº¬¶à¸öOFDM·ûºÅ£¬½öÔÚÖ¡Ä©Î²±£ÁôÒ»´Îºó×º
+% LTEÔ­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ´ï¿½ï¿½Ê±ï¿½ï¿½CPï¿½ï¿½Î§ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Ó£ï¿½Êµï¿½ï¿½Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+% Ö¡ï¿½á¹¹ï¿½ï¿½Ã¿Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½OFDMï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡Ä©Î²ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Îºï¿½×º
 % 
-% ·ûºÅ½á¹¹£º[CP(GI) | Ö÷Ìå(N) | ºó×º(GIP)]
-% ÖØµþ»úÖÆ£º
-%   - µ±Ç°·ûºÅµÄºó×º(GIP¸öÑù±¾)ÓëÏÂÒ»¸ö·ûºÅµÄCPÇ°GIP¸öÑù±¾ÖØµþ
-%   - ÖØµþÇøÓò£ºÔÚ´®ÐÐÐòÁÐÖÐ£¬Á½¸ö·ûºÅµÄ·ù¶ÈÏà¼Ó
-%   - ÖØµþÇøÓòÏÞÖÆÔÚCPÄÚ£¨GIP <= GI£©£¬²»Ó°ÏìÓÐÐ§Êý¾Ý£¨Ö÷Ìå²¿·Ö£©
+% ï¿½ï¿½ï¿½Å½á¹¹ï¿½ï¿½[CP(GI) | ï¿½ï¿½ï¿½ï¿½(N) | ï¿½ï¿½×º(GIP)]
+% ï¿½Øµï¿½ï¿½ï¿½ï¿½Æ£ï¿½
+%   - ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ÅµÄºï¿½×º(GIPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½)ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½CPÇ°GIPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½
+%   - ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÅµÄ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+%   - ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CPï¿½Ú£ï¿½GIP <= GIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½å²¿ï¿½Ö£ï¿½
 % 
-% ´®ÐÐÐòÁÐ½á¹¹£º
-%   [·ûºÅ1: CP+Ö÷Ìå+ºó×º] [·ûºÅ2: CP+Ö÷Ìå+ºó×º] ... [·ûºÅN: CP+Ö÷Ìå+ºó×º]
-%   ÆäÖÐ£º·ûºÅiµÄºó×ºÓë·ûºÅi+1µÄCPÇ°GIP¸öÑù±¾ÖØµþÏà¼Ó
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð½á¹¹ï¿½ï¿½
+%   [ï¿½ï¿½ï¿½ï¿½1: CP+ï¿½ï¿½ï¿½ï¿½+ï¿½ï¿½×º] [ï¿½ï¿½ï¿½ï¿½2: CP+ï¿½ï¿½ï¿½ï¿½+ï¿½ï¿½×º] ... [ï¿½ï¿½ï¿½ï¿½N: CP+ï¿½ï¿½ï¿½ï¿½+ï¿½ï¿½×º]
+%   ï¿½ï¿½ï¿½Ð£ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½Äºï¿½×ºï¿½ï¿½ï¿½ï¿½ï¿½i+1ï¿½ï¿½CPÇ°GIPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½
 num_frames = total_symbols / symbols_per_frame;
-frame_len_CP_suffix = symbols_per_frame*(IFFT_bin_length+GI)+GIP; % Ã¿Ö¡´®ÐÐ³¤¶È£¨½öÄ©Î²Ò»´Îºó×º£©
+frame_len_CP_suffix = symbols_per_frame*(IFFT_bin_length+GI)+GIP; % Ã¿Ö¡ï¿½ï¿½ï¿½Ð³ï¿½ï¿½È£ï¿½ï¿½ï¿½Ä©Î²Ò»ï¿½Îºï¿½×ºï¿½ï¿½
 
-% °´Ö¡¹¹Ôì£ºLTE·ç¸ñÖØµþÏà¼Ó
+% ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½ì£ºLTEï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½
 Tx_data = zeros(1, num_frames*frame_len_CP_suffix);
 
 write_offset = 0;
@@ -256,110 +256,110 @@ for f = 1:num_frames
     sym_start = (f-1)*symbols_per_frame + 1;
     sym_end   = f*symbols_per_frame;
 
-    % µ±Ç°Ö¡µÄ¼Ó´°·ûºÅ¾ØÕó
+    % ï¿½ï¿½Ç°Ö¡ï¿½Ä¼Ó´ï¿½ï¿½ï¿½ï¿½Å¾ï¿½ï¿½ï¿½
     frame_windowed = windowed_time_wave_matrix_cp(sym_start:sym_end, :);
 
-    % LTE·ç¸ñÖØµþÏà¼Ó£º¹¹ÔìÖ¡¼¶´®ÐÐÐÅºÅ
+    % LTEï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½
     frame_serial_windowed = zeros(1, frame_len_CP_suffix);
     
-    % µÚÒ»¸ö·ûºÅ£ºÍêÕûÐ´Èë£¨°üº¬CP+Ö÷Ìå+ºó×º£©
+    % ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ë£¨ï¿½ï¿½ï¿½ï¿½CP+ï¿½ï¿½ï¿½ï¿½+ï¿½ï¿½×ºï¿½ï¿½
     frame_serial_windowed(1:IFFT_bin_length+GI+GIP) = frame_windowed(1, :);
     
-    % ºóÐø·ûºÅ£ºÖØµþÏà¼Ó´¦Àí
+    % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½Øµï¿½ï¿½ï¿½Ó´ï¿½ï¿½ï¿½
     for i = 1:(symbols_per_frame-1)
-        % ÏÂÒ»¸ö·ûºÅÔÚ´®ÐÐÐòÁÐÖÐµÄÆðÊ¼Î»ÖÃ
-        % µÚi¸ö·ûºÅÕ¼¾Ý£º[1+(i-1)*(N+GI), i*(N+GI)+GIP]
-        % µÚi+1¸ö·ûºÅÓ¦¸Ã´Ó£ºi*(N+GI)+1 ¿ªÊ¼£¨ÓëµÚi¸ö·ûºÅµÄºó×ºÖØµþGIP¸öÑù±¾£©
+        % ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Ê¼Î»ï¿½ï¿½
+        % ï¿½ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½Ý£ï¿½[1+(i-1)*(N+GI), i*(N+GI)+GIP]
+        % ï¿½ï¿½i+1ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã´Ó£ï¿½i*(N+GI)+1 ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½ï¿½ï¿½ï¿½ï¿½ÅµÄºï¿½×ºï¿½Øµï¿½GIPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         next_symbol_start = i*(IFFT_bin_length+GI) + 1;
         next_symbol_end = (i+1)*(IFFT_bin_length+GI) + GIP;
         
-        % LTEÖØµþ»úÖÆ£º
-        % ÖØµþÇøÓò£ºµ±Ç°·ûºÅµÄºó×º(GIP)ÓëÏÂÒ»¸ö·ûºÅµÄCPÇ°GIP¸öÑù±¾ÖØµþ
-        % ÖØµþÎ»ÖÃ£º´®ÐÐÐòÁÐÖÐµÄ [next_symbol_start, next_symbol_start+GIP-1]
-        % µ±Ç°·ûºÅµÄºó×º£ºframe_windowed(i, IFFT_bin_length+GI+1:IFFT_bin_length+GI+GIP)
-        % ÏÂÒ»¸ö·ûºÅµÄCPÇ°GIP¸öÑù±¾£ºframe_windowed(i+1, 1:GIP)
+        % LTEï¿½Øµï¿½ï¿½ï¿½ï¿½Æ£ï¿½
+        % ï¿½Øµï¿½ï¿½ï¿½ï¿½ò£ºµï¿½Ç°ï¿½ï¿½ï¿½ÅµÄºï¿½×º(GIP)ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½CPÇ°GIPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½
+        % ï¿½Øµï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½ [next_symbol_start, next_symbol_start+GIP-1]
+        % ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ÅµÄºï¿½×ºï¿½ï¿½frame_windowed(i, IFFT_bin_length+GI+1:IFFT_bin_length+GI+GIP)
+        % ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½CPÇ°GIPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½frame_windowed(i+1, 1:GIP)
         
         if GIP > 0 && next_symbol_end <= length(frame_serial_windowed)
-            % ÖØµþÇøÓò£ºµ±Ç°·ûºÅµÄºó×º£¨ÒÑÐ´Èë£©+ ÏÂÒ»¸ö·ûºÅµÄCPÇ°GIP¸öÑù±¾£¨´ýÐ´Èë£©
+            % ï¿½Øµï¿½ï¿½ï¿½ï¿½ò£ºµï¿½Ç°ï¿½ï¿½ï¿½ÅµÄºï¿½×ºï¿½ï¿½ï¿½ï¿½Ð´ï¿½ë£©+ ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½CPÇ°GIPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ë£©
             overlap_start = next_symbol_start;
             overlap_end = overlap_start + GIP - 1;
             
-            % µ±Ç°·ûºÅµÄºó×º²¿·Ö£¨ÔÚframe_serial_windowedÖÐÒÑÐ´Èë£©
+            % ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ÅµÄºï¿½×ºï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½frame_serial_windowedï¿½ï¿½ï¿½ï¿½Ð´ï¿½ë£©
             current_suffix = frame_windowed(i, IFFT_bin_length+GI+1:IFFT_bin_length+GI+GIP);
             
-            % ÏÂÒ»¸ö·ûºÅµÄCPÇ°GIP¸öÑù±¾
+            % ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½CPÇ°GIPï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             next_cp_prefix = frame_windowed(i+1, 1:GIP);
             
-            % LTEÖØµþÏà¼Ó£ºÔÚÖØµþÇøÓò½«Á½¸ö·ûºÅµÄ·ù¶ÈÏà¼Ó
+            % LTEï¿½Øµï¿½ï¿½ï¿½Ó£ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÅµÄ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             frame_serial_windowed(overlap_start:overlap_end) = ...
                 current_suffix + next_cp_prefix;
             
-            % ·ÇÖØµþ²¿·Ö£ºÐ´ÈëÏÂÒ»¸ö·ûºÅµÄÊ£Óà²¿·Ö£¨CPµÄÊ£Óà²¿·Ö+Ö÷Ìå+ºó×º£©
+            % ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½Ö£ï¿½Ð´ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½Ê£ï¿½à²¿ï¿½Ö£ï¿½CPï¿½ï¿½Ê£ï¿½à²¿ï¿½ï¿½+ï¿½ï¿½ï¿½ï¿½+ï¿½ï¿½×ºï¿½ï¿½
             if overlap_end < next_symbol_end
                 non_overlap_start = overlap_end + 1;
                 non_overlap_end = next_symbol_end;
-                % ÏÂÒ»¸ö·ûºÅ´ÓGIP+1¿ªÊ¼µ½½áÎ²
+                % ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Å´ï¿½GIP+1ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Î²
                 frame_serial_windowed(non_overlap_start:non_overlap_end) = ...
                     frame_windowed(i+1, GIP+1:IFFT_bin_length+GI+GIP);
             end
         else
-            % Èç¹ûÃ»ÓÐºó×º£¨GIP=0£©£¬Ö±½ÓÐ´ÈëÏÂÒ»¸ö·ûºÅ
+            % ï¿½ï¿½ï¿½Ã»ï¿½Ðºï¿½×ºï¿½ï¿½GIP=0ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             if next_symbol_end <= length(frame_serial_windowed)
                 frame_serial_windowed(next_symbol_start:next_symbol_end) = frame_windowed(i+1, :);
             end
         end
     end
 
-    % Ð´Èëµ½ÕûÖ¡´®ÐÐÐòÁÐ
+    % Ð´ï¿½ëµ½ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     Tx_data(write_offset+1:write_offset+frame_len_CP_suffix) = frame_serial_windowed;
     write_offset = write_offset + frame_len_CP_suffix;
 end
 
-% Öð·ûºÅÖ±½Ó´®½Ó£¨º¬Ã¿·ûºÅºó×º£©£ºÓÃÓÚ¶Ô±ÈÓë"Î´¼Ó´°"ÆµÆ×·ÖÎö
+% ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó´ï¿½ï¿½Ó£ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½Åºï¿½×ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶Ô±ï¿½ï¿½ï¿½"Î´ï¿½Ó´ï¿½"Æµï¿½×·ï¿½ï¿½ï¿½
 Tx_data_withoutwindow = reshape(time_wave_matrix_cp', (total_symbols)*(IFFT_bin_length+GI+GIP), 1)';
 
-% Á½ÖÖ´®½Ó·½Ê½¶Ô±È£¨ÓÃÓÚFigure 6£©
-temp_time_symbol = length(Tx_data_withoutwindow); % Ã¿·ûºÅ´øºó×º
-temp_time_frame  = length(Tx_data);               % Ã¿Ö¡Ò»´Îºó×º
+% ï¿½ï¿½ï¿½Ö´ï¿½ï¿½Ó·ï¿½Ê½ï¿½Ô±È£ï¿½ï¿½ï¿½ï¿½ï¿½Figure 6ï¿½ï¿½
+temp_time_symbol = length(Tx_data_withoutwindow); % Ã¿ï¿½ï¿½ï¿½Å´ï¿½ï¿½ï¿½×º
+temp_time_frame  = length(Tx_data);               % Ã¿Ö¡Ò»ï¿½Îºï¿½×º
 
-% Figure 6: ·¢ËÍ¶Ë´®ÐÐÊ±ÓòÐÅºÅ£¨Á½ÖÖ´®½Ó·½Ê½¶Ô±È£©
-% - ×ÓÍ¼(1): ½«Ã¿¸ö·ûºÅ(º¬CP/ºó×º)Ö±½Ó´®½Ó
-% - ×ÓÍ¼(2): ½öÔÚÃ¿Ö¡Ä©Î²Ìí¼ÓÒ»´Îºó×ºµÄ¼Ó´°´®ÐÐ
+% Figure 6: ï¿½ï¿½ï¿½Í¶Ë´ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ÅºÅ£ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ï¿½Ó·ï¿½Ê½ï¿½Ô±È£ï¿½
+% - ï¿½ï¿½Í¼(1): ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ï¿½ï¿½CP/ï¿½ï¿½×º)Ö±ï¿½Ó´ï¿½ï¿½ï¿½
+% - ï¿½ï¿½Í¼(2): ï¿½ï¿½ï¿½ï¿½Ã¿Ö¡Ä©Î²ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Îºï¿½×ºï¿½Ä¼Ó´ï¿½ï¿½ï¿½ï¿½ï¿½
 figure (6)
 subplot(2,1,1);
 plot(0:temp_time_symbol-1,Tx_data_withoutwindow);
 grid on
 ylabel('Amplitude (volts)')
 xlabel('Time (samples)')
-title('OFDMÊ±ÓòÐÅºÅ')
+title('OFDMÊ±ï¿½ï¿½ï¿½Åºï¿½')
 temp_time2 = temp_time_frame;
 subplot(2,1,2);
 plot(0:temp_time2-1,Tx_data);
 grid on
 ylabel('Amplitude (volts)')
 xlabel('Time (samples)')
-title('OFDMÊ±ÓòÐÅºÅ')
+title('OFDMÊ±ï¿½ï¿½ï¿½Åºï¿½')
 %===============================================================================
-% ¡¾ÐÅºÅ·ÖÎöÓë¿ÉÊÓ»¯£º¾Ö²¿´°¿ÚÆµÆ×ÓëÊ±Óò¶Ô±È¡¿
+% ï¿½ï¿½ï¿½ÅºÅ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ô±È¡ï¿½
 %===============================================================================
 
 %------------------------------------------------------------------------------
-% ²½Öè9: ¾Ö²¿´°¿Ú¶¨Òå£¨ÓÃÓÚÏêÏ¸·ÖÎö£¬Óë Figure 12 ÏàÍ¬·¶Î§£©
+% ï¿½ï¿½ï¿½ï¿½9: ï¿½Ö²ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½å£¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Figure 12 ï¿½ï¿½Í¬ï¿½ï¿½Î§ï¿½ï¿½
 %------------------------------------------------------------------------------
-zoom_len = 5000; % ¾Ö²¿´°¿Ú³¤¶È£¨Óë Figure 12 ÏàÍ¬£©
+zoom_len = 5000; % ï¿½Ö²ï¿½ï¿½ï¿½ï¿½Ú³ï¿½ï¿½È£ï¿½ï¿½ï¿½ Figure 12 ï¿½ï¿½Í¬ï¿½ï¿½
 L = length(Tx_data);
 zs = max(1, floor(L/2) - floor(zoom_len/2));
 ze = min(L, zs + zoom_len - 1);
-% ÎªÎ´¼Ó´°ÐÅºÅ¼ÆËã¶ÔÓ¦µÄ´°¿Ú·¶Î§
+% ÎªÎ´ï¿½Ó´ï¿½ï¿½ÅºÅ¼ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ä´ï¿½ï¿½Ú·ï¿½Î§
 L2 = length(Tx_data_withoutwindow);
 zs2 = max(1, floor(L2/2) - floor(zoom_len/2));
 ze2 = min(L2, zs2 + zoom_len - 1);
 
-% ÌáÈ¡¾Ö²¿´°¿ÚÊ±ÓòÐÅºÅ
-subset_ofdm_no_window = Tx_data_withoutwindow(zs2:ze2);  % Î´¼Ó´°ÐÅºÅ¾Ö²¿´°¿Ú
-subset_ofdm_window = Tx_data(zs:ze);                      % ¼Ó´°ÐÅºÅ¾Ö²¿´°¿Ú
+% ï¿½ï¿½È¡ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½Åºï¿½
+subset_ofdm_no_window = Tx_data_withoutwindow(zs2:ze2);  % Î´ï¿½Ó´ï¿½ï¿½ÅºÅ¾Ö²ï¿½ï¿½ï¿½ï¿½ï¿½
+subset_ofdm_window = Tx_data(zs:ze);                      % ï¿½Ó´ï¿½ï¿½ÅºÅ¾Ö²ï¿½ï¿½ï¿½ï¿½ï¿½
 
-% ¼ÆËãÆµÓò·ù¶ÈÆ×£¨Ë«±ßÆ×£¬°üº¬¸ºÆµÂÊ£©
+% ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×£ï¿½Ë«ï¿½ï¿½ï¿½×£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½Ê£ï¿½
 Nfft_no_window = length(subset_ofdm_no_window);
 Nfft_window = length(subset_ofdm_window);
 subset_ofdm_f_no_window = fftshift(fft(subset_ofdm_no_window));
@@ -368,27 +368,27 @@ subset_ofdm_f_window = fftshift(fft(subset_ofdm_window));
 subset_ofdm_f_log_window = 20*log10(abs(subset_ofdm_f_window)/max(abs(subset_ofdm_f_window)) + eps);
 
 %------------------------------------------------------------------------------
-% Figure 7: ¼Ó´°Ç°ºó¾Ö²¿´°¿ÚÊ±Óò¶Ô±È£¨Óë Figure 12 ÏàÍ¬´°¿Ú·¶Î§£©
+% Figure 7: ï¿½Ó´ï¿½Ç°ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ô±È£ï¿½ï¿½ï¿½ Figure 12 ï¿½ï¿½Í¬ï¿½ï¿½ï¿½Ú·ï¿½Î§ï¿½ï¿½
 %------------------------------------------------------------------------------
 figure (7)
 subplot(2,1,1)
 plot(real(subset_ofdm_no_window), 'b-', 'LineWidth', 1.5)
 grid on
-xlabel('Ñù±¾µã')
-ylabel('·ù¶È')
-title(sprintf('Î´¼Ó´°ÐÅºÅÊ±Óò (window [%d:%d])', zs2, ze2))
+xlabel('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½')
+ylabel('ï¿½ï¿½ï¿½ï¿½')
+title(sprintf('Î´ï¿½Ó´ï¿½ï¿½Åºï¿½Ê±ï¿½ï¿½ (window [%d:%d])', zs2, ze2))
 
 subplot(2,1,2)
 plot(real(subset_ofdm_window), 'r-', 'LineWidth', 1.5)
 grid on
-xlabel('Ñù±¾µã')
-ylabel('·ù¶È')
-title(sprintf('¼Ó´°ÐÅºÅÊ±Óò (window [%d:%d])', zs, ze))
+xlabel('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½')
+ylabel('ï¿½ï¿½ï¿½ï¿½')
+title(sprintf('ï¿½Ó´ï¿½ï¿½Åºï¿½Ê±ï¿½ï¿½ (window [%d:%d])', zs, ze))
 
 %------------------------------------------------------------------------------
-% Figure 8: ¼Ó´°Ç°ºó¾Ö²¿´°¿ÚÆµÓò¶Ô±È£¨Óë Figure 12 ÏàÍ¬´°¿Ú·¶Î§£¬Ë«±ßÆ×£©
+% Figure 8: ï¿½Ó´ï¿½Ç°ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½Ô±È£ï¿½ï¿½ï¿½ Figure 12 ï¿½ï¿½Í¬ï¿½ï¿½ï¿½Ú·ï¿½Î§ï¿½ï¿½Ë«ï¿½ï¿½ï¿½×£ï¿½
 %------------------------------------------------------------------------------
-% ¹éÒ»»¯ÆµÂÊÖá£º-0.5..0.5£¨¶ÔÓ¦ -fs/2..fs/2£©
+% ï¿½ï¿½Ò»ï¿½ï¿½Æµï¿½ï¿½ï¿½á£º-0.5..0.5ï¿½ï¿½ï¿½ï¿½Ó¦ -fs/2..fs/2ï¿½ï¿½
 f_norm_no_window = (-Nfft_no_window/2:(Nfft_no_window/2-1))/Nfft_no_window;
 f_norm_window = (-Nfft_window/2:(Nfft_window/2-1))/Nfft_window;
 
@@ -397,23 +397,23 @@ subplot(2,1,1)
 plot(f_norm_no_window, subset_ofdm_f_log_no_window, 'b-', 'LineWidth', 1.5)
 grid on
 axis([-0.5 0.5 -40 max(subset_ofdm_f_log_no_window)])
-ylabel('·ù¶È (dB)')
-xlabel('¹éÒ»»¯ÆµÂÊ (-0.5..0.5 = ¡Àfs/2)')
-title(sprintf('Î´¼Ó´°ÐÅºÅ·ù¶ÈÆ×£¨Ë«±ßÆ×£¬window [%d:%d]£©', zs2, ze2))
+ylabel('ï¿½ï¿½ï¿½ï¿½ (dB)')
+xlabel('ï¿½ï¿½Ò»ï¿½ï¿½Æµï¿½ï¿½ (-0.5..0.5 = ï¿½ï¿½fs/2)')
+title(sprintf('Î´ï¿½Ó´ï¿½ï¿½ÅºÅ·ï¿½ï¿½ï¿½ï¿½×£ï¿½Ë«ï¿½ï¿½ï¿½×£ï¿½window [%d:%d]ï¿½ï¿½', zs2, ze2))
 
 subplot(2,1,2)
 plot(f_norm_window, subset_ofdm_f_log_window, 'r-', 'LineWidth', 1.5)
 grid on
 axis([-0.5 0.5 -40 max(subset_ofdm_f_log_window)])
-ylabel('·ù¶È (dB)')
-xlabel('¹éÒ»»¯ÆµÂÊ (-0.5..0.5 = ¡Àfs/2)')
-title(sprintf('¼Ó´°ÐÅºÅ·ù¶ÈÆ×£¨Ë«±ßÆ×£¬window [%d:%d]£©', zs, ze))
+ylabel('ï¿½ï¿½ï¿½ï¿½ (dB)')
+xlabel('ï¿½ï¿½Ò»ï¿½ï¿½Æµï¿½ï¿½ (-0.5..0.5 = ï¿½ï¿½fs/2)')
+title(sprintf('ï¿½Ó´ï¿½ï¿½ÅºÅ·ï¿½ï¿½ï¿½ï¿½×£ï¿½Ë«ï¿½ï¿½ï¿½×£ï¿½window [%d:%d]ï¿½ï¿½', zs, ze))
 
 %===============================================================================
-% ¡¾ÐÅµÀ´«Êä£ºAWGN¼ÓÐÔ¸ßË¹°×ÔëÉùÐÅµÀ¡¿
+% ï¿½ï¿½ï¿½Åµï¿½ï¿½ï¿½ï¿½ä£ºAWGNï¿½ï¿½ï¿½Ô¸ï¿½Ë¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½ï¿½ï¿½
 %===============================================================================
-% ÔëÉù¹¦ÂÊ¼ÆËã£º¸ù¾ÝÄ¿±êSNRºÍ·¢ËÍÐÅºÅ¹¦ÂÊ¼ÆËãÔëÉù·½²î
-Tx_signal_power=var(Tx_data); % ÒÔ¼Ó´°ºóµÄ·¢ËÍ´®ÐÐÎª»ù×¼¼ÆËã¹¦ÂÊ
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ã£ºï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½SNRï¿½Í·ï¿½ï¿½ï¿½ï¿½ÅºÅ¹ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+Tx_signal_power=var(Tx_data); % ï¿½Ô¼Ó´ï¿½ï¿½ï¿½Ä·ï¿½ï¿½Í´ï¿½ï¿½ï¿½Îªï¿½ï¿½×¼ï¿½ï¿½ï¿½ã¹¦ï¿½ï¿½
 linear_SNR=10^(targetSNRdB/10);
 noise_sigma=Tx_signal_power/linear_SNR;
 noise_scale_factor=sqrt(noise_sigma);
@@ -421,26 +421,26 @@ noise=randn(1,length(Tx_data))*noise_scale_factor;
 Rx_data=Tx_data+noise;
 
 %------------------------------------------------------------------------------
-% ²½Öè10: ¾Ö²¿´°¿ÚÊ±Óò¶Ô±È£¨¼ÓÔëÇ°ºó£©
+% ï¿½ï¿½ï¿½ï¿½10: ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ô±È£ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½
 %------------------------------------------------------------------------------
-% ×¢£º´°¿Ú·¶Î§ (zs, ze) ÒÑÔÚ Figure 7/8 ´¦¶¨Òå£¬´Ë´¦Ö±½ÓÊ¹ÓÃ
+% ×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ú·ï¿½Î§ (zs, ze) ï¿½ï¿½ï¿½ï¿½ Figure 7/8 ï¿½ï¿½ï¿½ï¿½ï¿½å£¬ï¿½Ë´ï¿½Ö±ï¿½ï¿½Ê¹ï¿½ï¿½
 figure(12);
 subplot(2,1,1);
 plot(zs:ze, Tx_data(zs:ze));
 grid on;
 ylabel('Amplitude (volts)');
 xlabel('Sample index');
-title(sprintf('·¢ËÍÐÅºÅ£¨¾Ö²¿·Å´ó£©[%d:%d]', zs, ze));
+title(sprintf('ï¿½ï¿½ï¿½ï¿½ï¿½ÅºÅ£ï¿½ï¿½Ö²ï¿½ï¿½Å´ï¿½[%d:%d]', zs, ze));
 
 subplot(2,1,2);
 plot(zs:ze, Rx_data(zs:ze));
 grid on;
 ylabel('Amplitude (volts)');
 xlabel('Sample index');
-title(sprintf('½ÓÊÕÐÅºÅ£¨¾Ö²¿·Å´ó£©[%d:%d]', zs, ze));
+title(sprintf('ï¿½ï¿½ï¿½ï¿½ï¿½ÅºÅ£ï¿½ï¿½Ö²ï¿½ï¿½Å´ï¿½[%d:%d]', zs, ze));
 
 %------------------------------------------------------------------------------
-% ²½Öè11: ¼ÆËã²¢´òÓ¡¾Ö²¿´°¿ÚµÄ SNR Óë MSE
+% ï¿½ï¿½ï¿½ï¿½11: ï¿½ï¿½ï¿½ã²¢ï¿½ï¿½Ó¡ï¿½Ö²ï¿½ï¿½ï¿½ï¿½Úµï¿½ SNR ï¿½ï¿½ MSE
 %------------------------------------------------------------------------------
 tx_seg = Tx_data(zs:ze);
 rx_seg = Rx_data(zs:ze);
@@ -449,7 +449,7 @@ noise_seg = rx_seg - tx_seg;
 sig_power  = mean(tx_seg.^2);
 noise_power = mean(noise_seg.^2);
 snr_zoom_db = 10*log10(sig_power / max(noise_power, eps));
-mse_zoom = noise_power; % ¾ù·½Îó²î=ÔëÉù¾ù·½¹¦ÂÊ
+mse_zoom = noise_power; % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½=ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 fprintf('\n==== Zoomed Window Metrics (Figure 12) ====\n');
 fprintf('Window range       : [%d : %d] (length=%d)\n', zs, ze, numel(tx_seg));
@@ -460,17 +460,17 @@ fprintf('MSE (Tx vs Rx)     : %.6g\n', mse_zoom);
 fprintf('===========================================\n');
 
 %------------------------------------------------------------------------------
-% ²½Öè12: Figure 13 - Óë Figure 12 Í¬Ò»´°¿ÚµÄÆµÆ×¶Ô±È£¨Ë«±ßÆ×£©
+% ï¿½ï¿½ï¿½ï¿½12: Figure 13 - ï¿½ï¿½ Figure 12 Í¬Ò»ï¿½ï¿½ï¿½Úµï¿½Æµï¿½×¶Ô±È£ï¿½Ë«ï¿½ï¿½ï¿½×£ï¿½
 %------------------------------------------------------------------------------
 Nfft_zoom = 2^nextpow2(length(tx_seg));
 Tx_Fz = fftshift(fft(tx_seg, Nfft_zoom));
 Rx_Fz = fftshift(fft(rx_seg, Nfft_zoom));
 
-% ¹éÒ»»¯µ½×ÔÉí×î´óÖµ²¢×ª dB
+% ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµï¿½ï¿½×ª dB
 Tx_mag_db_z = 20*log10( abs(Tx_Fz)/max(abs(Tx_Fz)) + eps );
 Rx_mag_db_z = 20*log10( abs(Rx_Fz)/max(abs(Rx_Fz)) + eps );
 
-% ¹éÒ»»¯ÆµÂÊÖá£º-0.5..0.5£¨¶ÔÓ¦ -fs/2..fs/2£©
+% ï¿½ï¿½Ò»ï¿½ï¿½Æµï¿½ï¿½ï¿½á£º-0.5..0.5ï¿½ï¿½ï¿½ï¿½Ó¦ -fs/2..fs/2ï¿½ï¿½
 f_norm_z = (-Nfft_zoom/2:(Nfft_zoom/2-1))/Nfft_zoom;
 
 figure(13);
@@ -479,27 +479,27 @@ plot(f_norm_z, Tx_mag_db_z, 'b');
 grid on;
 ylabel('Magnitude (dB)');
 xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
-title(sprintf('·¢ËÍÐÅºÅÆµÆ×£¨Ë«±ßÆ×£¬¾Ö²¿·Å´ó [%d:%d]£©', zs, ze));
+title(sprintf('ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½Æµï¿½×£ï¿½Ë«ï¿½ï¿½ï¿½×£ï¿½ï¿½Ö²ï¿½ï¿½Å´ï¿½ [%d:%d]ï¿½ï¿½', zs, ze));
 
 subplot(2,1,2);
 plot(f_norm_z, Rx_mag_db_z, 'r');
 grid on;
 ylabel('Magnitude (dB)');
 xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
-title(sprintf('½ÓÊÕÐÅºÅÆµÆ×£¨Ë«±ßÆ×£¬¾Ö²¿·Å´ó [%d:%d]£©', zs, ze));
+title(sprintf('ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½Æµï¿½×£ï¿½Ë«ï¿½ï¿½ï¿½×£ï¿½ï¿½Ö²ï¿½ï¿½Å´ï¿½ [%d:%d]ï¿½ï¿½', zs, ze));
 
 %===============================================================================
-% ¡¾½ÓÊÕ¶Ë´¦ÀíÁ÷³Ì¡¿
+% ï¿½ï¿½ï¿½ï¿½ï¿½Õ¶Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì¡ï¿½
 %===============================================================================
 
 %------------------------------------------------------------------------------
-% ²½Öè13: ´®²¢×ª»»£¬È¥³ýÑ­»·Ç°×ººÍºó×º£¨LTE·ç¸ñ£©
+% ï¿½ï¿½ï¿½ï¿½13: ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½È¥ï¿½ï¿½Ñ­ï¿½ï¿½Ç°×ºï¿½Íºï¿½×ºï¿½ï¿½LTEï¿½ï¿½ï¿½
 %------------------------------------------------------------------------------
-% LTEÔ­Àí£º½ÓÊÕ¶ËÈ¥³ýCPÊ±Ö»È¡Ö÷Ìå²¿·Ö£¬²»ÊÜÖØµþÓ°Ïì
-% - ·¢ËÍ¶Ë£º·ûºÅ½á¹¹Îª [CP(GI) | Ö÷Ìå(N) | ºó×º(GIP)]£¬ÖØµþÇøÓòÔÚCPÄÚ
-% - ½ÓÊÕ¶Ë£ºÈ¥³ýCPºÍºó×º£¬Ö»ÌáÈ¡Ö÷Ìå²¿·Ö£¨N¸öÑù±¾£©½øÐÐFFT½âµ÷
-% - ÖØµþÇøÓò²»Ó°ÏìÓÐÐ§Êý¾Ý£¬ÒòÎªÖØµþÖ»ÔÚCP·¶Î§ÄÚ£¬Ö÷Ìå²¿·Ö²»ÊÜÓ°Ïì
-symbol_len = IFFT_bin_length+GI+GIP;  % Ã¿¸ö·ûºÅµÄ×Ü³¤¶È£¨º¬CP+Ö÷Ìå+ºó×º£©
+% LTEÔ­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¶ï¿½È¥ï¿½ï¿½CPÊ±Ö»È¡ï¿½ï¿½ï¿½å²¿ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½Ó°ï¿½ï¿½
+% - ï¿½ï¿½ï¿½Í¶Ë£ï¿½ï¿½ï¿½ï¿½Å½á¹¹Îª [CP(GI) | ï¿½ï¿½ï¿½ï¿½(N) | ï¿½ï¿½×º(GIP)]ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CPï¿½ï¿½
+% - ï¿½ï¿½ï¿½Õ¶Ë£ï¿½È¥ï¿½ï¿½CPï¿½Íºï¿½×ºï¿½ï¿½Ö»ï¿½ï¿½È¡ï¿½ï¿½ï¿½å²¿ï¿½Ö£ï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½FFTï¿½ï¿½ï¿½
+% - ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½Îªï¿½Øµï¿½Ö»ï¿½ï¿½CPï¿½ï¿½Î§ï¿½Ú£ï¿½ï¿½ï¿½ï¿½å²¿ï¿½Ö²ï¿½ï¿½ï¿½Ó°ï¿½ï¿½
+symbol_len = IFFT_bin_length+GI+GIP;  % Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½ï¿½Ü³ï¿½ï¿½È£ï¿½ï¿½ï¿½CP+ï¿½ï¿½ï¿½ï¿½+ï¿½ï¿½×ºï¿½ï¿½
 
 Rx_data_matrix=zeros(total_symbols,symbol_len);
 read_offset = 0;
@@ -507,60 +507,60 @@ for f = 1:num_frames
     frame_rx = Rx_data(read_offset+1:read_offset+frame_len_CP_suffix);
     for i = 1:symbols_per_frame
         global_sym_idx = (f-1)*symbols_per_frame + i;
-        % ÌáÈ¡·ûºÅ£º´Ó´®ÐÐÐòÁÐÖÐÌáÈ¡Ã¿¸ö·ûºÅ£¨º¬CP+Ö÷Ìå+ºó×º£©
+        % ï¿½ï¿½È¡ï¿½ï¿½ï¿½Å£ï¿½ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½CP+ï¿½ï¿½ï¿½ï¿½+ï¿½ï¿½×ºï¿½ï¿½
         start_idx = (i-1)*(IFFT_bin_length+GI) + 1;
         end_idx = i*(IFFT_bin_length+GI) + GIP;
         Rx_data_matrix(global_sym_idx,:) = frame_rx(start_idx:end_idx);
     end
     read_offset = read_offset + frame_len_CP_suffix;
 end
-% LTEÔ­Àí£ºÈ¥³ýCPºÍºó×º£¬Ö»±£ÁôÖ÷Ìå²¿·Ö£¨N¸öÑù±¾£©½øÐÐFFT½âµ÷
-% ÖØµþÇøÓòÔÚCPÄÚ£¬È¥³ýCPºó²»Ó°ÏìÓÐÐ§Êý¾Ý
+% LTEÔ­ï¿½ï¿½ï¿½ï¿½È¥ï¿½ï¿½CPï¿½Íºï¿½×ºï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å²¿ï¿½Ö£ï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½FFTï¿½ï¿½ï¿½
+% ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CPï¿½Ú£ï¿½È¥ï¿½ï¿½CPï¿½ï¿½Ó°ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½
 Rx_data_complex_matrix=Rx_data_matrix(:,GI+1:IFFT_bin_length+GI); 
 
 %------------------------------------------------------------------------------
-% ²½Öè14: FFT½âµ÷£¨Ê±Óò ¡ú ÆµÓò£©£¬ÌáÈ¡×ÓÔØ²¨Êý¾Ý
+% ï¿½ï¿½ï¿½ï¿½14: FFTï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ ï¿½ï¿½ Æµï¿½ò£©£ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½
 %------------------------------------------------------------------------------
 Y1=fft(Rx_data_complex_matrix,IFFT_bin_length,2);
 Rx_carriers=Y1(:,carriers);
 Rx_mag=abs(Rx_carriers);
 Rx_phase=angle(Rx_carriers);
 
-% ¼«×ø±ê×ªÖ±½Ç×ø±ê
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªÖ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 [M, N]=pol2cart(Rx_phase, Rx_mag); 
 Rx_complex_carrier_matrix = complex(M, N);
-% Figure 9: ½ÓÊÕ¶Ë×ÓÔØ²¨ÐÇ×ùÍ¼£¨IQÆ½Ãæ£©£¬SNRÔ½¸ßÉ¢µãÔ½¼¯ÖÐÓÚ16QAMÀíÏëµã
+% Figure 9: ï¿½ï¿½ï¿½Õ¶ï¿½ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½IQÆ½ï¿½æ£©ï¿½ï¿½SNRÔ½ï¿½ï¿½É¢ï¿½ï¿½Ô½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½16QAMï¿½ï¿½ï¿½ï¿½ï¿½
 figure(9);
 plot(Rx_complex_carrier_matrix,'*b');
 axis([-4, 4, -4, 4]);
-title('½ÓÊÕÐÅºÅ16QAMÐÇ×ùÍ¼')
+title('ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½16QAMï¿½ï¿½ï¿½ï¿½Í¼')
 grid on
 
 %------------------------------------------------------------------------------
-% ²½Öè15: 16QAM½âµ÷£¨×îÐ¡Å·ÊÏ¾àÀëÅÐ¾ö£©
+% ï¿½ï¿½ï¿½ï¿½15: 16QAMï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡Å·ï¿½Ï¾ï¿½ï¿½ï¿½ï¿½Ð¾ï¿½ï¿½ï¿½
 %------------------------------------------------------------------------------
 Rx_serial_complex_symbols = reshape(Rx_complex_carrier_matrix',size(Rx_complex_carrier_matrix, 1)*size(Rx_complex_carrier_matrix,2),1)' ; 
 Rx_decoded_binary_symbols=demoduqam16(Rx_serial_complex_symbols);
 baseband_in = Rx_decoded_binary_symbols;
-% Figure 10: ±ÈÌØÁ÷¶Ô±È£¨Ç°100±ÈÌØ£©¡ª¡ªÉÏ:·¢ËÍ£¬ÏÂ:½ÓÊÕÅÐ¾ö
+% Figure 10: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±È£ï¿½Ç°100ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½:ï¿½ï¿½ï¿½ï¿½ï¿½Ð¾ï¿½
 figure(10);
 subplot(2,1,1);
 stem(baseband_out(1:100));
-title('·¢ËÍ±ÈÌØÁ÷£¨Ç°100Î»£©')
+title('ï¿½ï¿½ï¿½Í±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°100Î»ï¿½ï¿½')
 subplot(2,1,2);
 stem(baseband_in(1:100));
-title('½ÓÊÕ±ÈÌØÁ÷£¨Ç°100Î»£©')
+title('ï¿½ï¿½ï¿½Õ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°100Î»ï¿½ï¿½')
 %------------------------------------------------------------------------------
-% ²½Öè16: ÎóÂëÂÊ¼ÆËã£¨15dB£¬ÓÃÓÚÏÔÊ¾ÕªÒª£©
+% ï¿½ï¿½ï¿½ï¿½16: ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ã£¨15dBï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ÕªÒªï¿½ï¿½
 %------------------------------------------------------------------------------
 bit_errors=find(baseband_in ~=baseband_out);
 bit_error_count = size(bit_errors, 2); 
 ber_15dB=bit_error_count/baseband_out_length;
 
 %------------------------------------------------------------------------------
-% ²½Öè17: ÃüÁîÐÐÊä³ö¹Ø¼üÖ¸±ê
+% ï¿½ï¿½ï¿½ï¿½17: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¼ï¿½Ö¸ï¿½ï¿½
 %------------------------------------------------------------------------------
-null_subcarriers = IFFT_bin_length - 2*carrier_count; % °üº¬DC/±£»¤´ø
+null_subcarriers = IFFT_bin_length - 2*carrier_count; % ï¿½ï¿½ï¿½ï¿½DC/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 fprintf('\n==== Simulation Summary (SNR = %.2f dB) ====\n', targetSNRdB);
 fprintf('Total symbols     : %d\n', total_symbols);
@@ -572,27 +572,27 @@ fprintf('IFFT length (N)   : %d\n', IFFT_bin_length);
 fprintf('Active carriers   : %d\n', carrier_count);
 fprintf('Null carriers     : %d\n', null_subcarriers);
 fprintf('CP length (GI)    : %d (ratio=%.3f)\n', GI, GI/IFFT_bin_length);
-fprintf('Suffix length     : %d (GIP <= GI£¬ÏÞÖÆÔÚCPÄÚ)\n', GIP);
-fprintf('One OFDM symbol   : %d samples (N+GI+GIP£¬LTE·ç¸ñ)\n', IFFT_bin_length+GI+GIP);
+fprintf('Suffix length     : %d (GIP <= GIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CPï¿½ï¿½)\n', GIP);
+fprintf('One OFDM symbol   : %d samples (N+GI+GIPï¿½ï¿½LTEï¿½ï¿½ï¿½)\n', IFFT_bin_length+GI+GIP);
 fprintf('Window roll-off   : 1/%d\n', round(1/beta));
-fprintf('Solution method   : %d (LTE·ç¸ñ£ºÖØµþÏà¼Ó£¬ÖØµþÇøÓòÏÞÖÆÔÚCPÄÚ)\n', solution_method);
-fprintf('Overlap length    : %d samples (GIP <= GI£¬ÏÞÖÆÔÚCPÄÚ)\n', GIP);
+fprintf('Solution method   : %d (LTEï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½Ó£ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CPï¿½ï¿½)\n', solution_method);
+fprintf('Overlap length    : %d samples (GIP <= GIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CPï¿½ï¿½)\n', GIP);
 fprintf('Symbols per frame : %d\n', symbols_per_carrier);
 fprintf('==============================\n\n');
 
 %===============================================================================
-% ¡¾BER-SNRÐÔÄÜÇúÏß¼ÆËã¡¿
+% ï¿½ï¿½BER-SNRï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ã¡¿
 %===============================================================================
-% ËµÃ÷£ºÔÚ10-30dB·¶Î§ÄÚ£¬²½½ø2dB£¬¼ÆËã¸÷SNRµãµÄÎóÂëÂÊ
+% Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½10-30dBï¿½ï¿½Î§ï¿½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½2dBï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SNRï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 fprintf('\n==== Computing BER-SNR Curve (10-30 dB, step 2 dB) ====\n');
-SNR_range = 10:2:30;  % ÐÅÔë±È·¶Î§
-ber_results = zeros(size(SNR_range));  % ´æ´¢BER½á¹û
+SNR_range = 10:2:30;  % ï¿½ï¿½ï¿½ï¿½È·ï¿½Î§
+ber_results = zeros(size(SNR_range));  % ï¿½æ´¢BERï¿½ï¿½ï¿½
 
 for idx = 1:length(SNR_range)
     snr_dB = SNR_range(idx);
     
     %--------------------------------------------------------------------------
-    % ¶ÔÃ¿¸öSNRµã£ºÖØÐÂ¼ÆËãÔëÉù²¢Ìí¼Óµ½·¢ËÍÐÅºÅ
+    % ï¿½ï¿½Ã¿ï¿½ï¿½SNRï¿½ã£ºï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åºï¿½
     %--------------------------------------------------------------------------
     linear_SNR = 10^(snr_dB/10);
     noise_sigma_loop = Tx_signal_power/linear_SNR;
@@ -600,8 +600,8 @@ for idx = 1:length(SNR_range)
     noise_loop = randn(1, length(Tx_data)) * noise_scale_factor_loop;
     Rx_data_loop = Tx_data + noise_loop;
     
-    % ½ÓÊÕ¶Ë´®²¢×ª»»£¨°´Ö¡£©È¥³ýÑ­»·Ç°×ººÍºó×º£¨LTE·ç¸ñ£©
-    symbol_len_loop = IFFT_bin_length+GI+GIP;  % Ã¿¸ö·ûºÅµÄ×Ü³¤¶È£¨º¬CP+Ö÷Ìå+ºó×º£©
+    % ï¿½ï¿½ï¿½Õ¶Ë´ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½È¥ï¿½ï¿½Ñ­ï¿½ï¿½Ç°×ºï¿½Íºï¿½×ºï¿½ï¿½LTEï¿½ï¿½ï¿½
+    symbol_len_loop = IFFT_bin_length+GI+GIP;  % Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½ï¿½Ü³ï¿½ï¿½È£ï¿½ï¿½ï¿½CP+ï¿½ï¿½ï¿½ï¿½+ï¿½ï¿½×ºï¿½ï¿½
     
     Rx_data_matrix_loop = zeros(total_symbols, symbol_len_loop);
     read_offset = 0;
@@ -609,17 +609,17 @@ for idx = 1:length(SNR_range)
         frame_rx = Rx_data_loop(read_offset+1:read_offset+frame_len_CP_suffix);
         for i = 1:symbols_per_frame
             global_sym_idx = (f-1)*symbols_per_frame + i;
-            % ÌáÈ¡·ûºÅ£º´Ó´®ÐÐÐòÁÐÖÐÌáÈ¡Ã¿¸ö·ûºÅ£¨º¬CP+Ö÷Ìå+ºó×º£©
+            % ï¿½ï¿½È¡ï¿½ï¿½ï¿½Å£ï¿½ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½Å£ï¿½ï¿½ï¿½CP+ï¿½ï¿½ï¿½ï¿½+ï¿½ï¿½×ºï¿½ï¿½
             start_idx = (i-1)*(IFFT_bin_length+GI) + 1;
             end_idx = i*(IFFT_bin_length+GI) + GIP;
             Rx_data_matrix_loop(global_sym_idx,:) = frame_rx(start_idx:end_idx);
         end
         read_offset = read_offset + frame_len_CP_suffix;
     end
-    % LTEÔ­Àí£ºÈ¥³ýCPºÍºó×º£¬Ö»±£ÁôÖ÷Ìå²¿·Ö£¨N¸öÑù±¾£©½øÐÐFFT½âµ÷
+    % LTEÔ­ï¿½ï¿½ï¿½ï¿½È¥ï¿½ï¿½CPï¿½Íºï¿½×ºï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å²¿ï¿½Ö£ï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½FFTï¿½ï¿½ï¿½
     Rx_data_complex_matrix_loop = Rx_data_matrix_loop(:,GI+1:IFFT_bin_length+GI);
     
-    % FFT½âµ÷£¬ÌáÈ¡×ÓÔØ²¨Êý¾Ý
+    % FFTï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½Ø²ï¿½ï¿½ï¿½ï¿½ï¿½
     Y1_loop = fft(Rx_data_complex_matrix_loop, IFFT_bin_length, 2);
     Rx_carriers_loop = Y1_loop(:,carriers);
     Rx_mag_loop = abs(Rx_carriers_loop);
@@ -627,12 +627,12 @@ for idx = 1:length(SNR_range)
     [M_loop, N_loop] = pol2cart(Rx_phase_loop, Rx_mag_loop);
     Rx_complex_carrier_matrix_loop = complex(M_loop, N_loop);
     
-    % 16QAM½âµ÷
+    % 16QAMï¿½ï¿½ï¿½
     Rx_serial_complex_symbols_loop = reshape(Rx_complex_carrier_matrix_loop', size(Rx_complex_carrier_matrix_loop, 1)*size(Rx_complex_carrier_matrix_loop, 2), 1)';
     Rx_decoded_binary_symbols_loop = demoduqam16(Rx_serial_complex_symbols_loop);
     baseband_in_loop = Rx_decoded_binary_symbols_loop;
     
-    % ¼ÆËãBER
+    % ï¿½ï¿½ï¿½ï¿½BER
     bit_errors_loop = find(baseband_in_loop ~= baseband_out);
     bit_error_count_loop = size(bit_errors_loop, 2);
     ber_results(idx) = bit_error_count_loop / baseband_out_length;
@@ -642,20 +642,20 @@ end
 fprintf('==========================================================\n');
 
 %------------------------------------------------------------------------------
-% ²½Öè18: Figure 11 - BER-SNRÐÔÄÜÇúÏß»æÖÆ
+% ï¿½ï¿½ï¿½ï¿½18: Figure 11 - BER-SNRï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß»ï¿½ï¿½ï¿½
 %------------------------------------------------------------------------------
-% ´¦Àí BER Îª 0 µÄÇé¿ö£¬ÓÃºÜÐ¡µÄÖµ´úÌæÒÔ±ãÔÚ¶ÔÊý×ø±êÏÂÏÔÊ¾
+% ï¿½ï¿½ï¿½ï¿½ BER Îª 0 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ãºï¿½Ð¡ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½Ú¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾
 ber_plot = ber_results;
-ber_plot(ber_plot == 0) = 1e-10;  % ½« 0 Ìæ»»ÎªºÜÐ¡µÄÖµ
+ber_plot(ber_plot == 0) = 1e-10;  % ï¿½ï¿½ 0 ï¿½æ»»Îªï¿½ï¿½Ð¡ï¿½ï¿½Öµ
 
 figure(11);
 semilogy(SNR_range, ber_plot, 'b-o', 'LineWidth', 1.5, 'MarkerSize', 6);
 xlabel('SNR (dB)');
 ylabel('BER');
-title('OFDMÏµÍ³ÎóÂëÂÊÐÔÄÜ');
+title('OFDMÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½');
 grid on
 
-% ÉèÖÃºÏÀíµÄÖá·¶Î§
+% ï¿½ï¿½ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½á·¶Î§
 non_zero_ber = ber_results(ber_results > 0);
 if ~isempty(non_zero_ber)
     y_min = min(non_zero_ber) * 0.5;
@@ -668,7 +668,7 @@ axis([9 31 y_min y_max])
 
 toc
 %===============================================================================
-% ÎÄ¼þ½áÊø
+% ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
 %===============================================================================
 
 

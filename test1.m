@@ -54,7 +54,7 @@ close all;
 
 carrier_count=200;                 % 有效数据子载波数（不含镜像与空子载波）
 symbols_per_frame=50;              % 每帧 OFDM 符号数
-total_symbols=100;                 % 总共要传输的 OFDM 符号数（改为100）
+total_symbols=1000;                % 总共要传输的 OFDM 符号数（改为1000）
 symbols_per_carrier=total_symbols; % 为兼容后续矩阵尺寸，沿用原变量表示"总符号数"
 bits_per_symbol=4;                 % 每个子载波承载的比特数（4=16QAM）
 
@@ -136,8 +136,8 @@ title('OFDM子载波频率幅度');
 figure(2);
 plot(0:IFFT_bin_length-1, (180/pi)*angle(IFFT_modulation(2,1:IFFT_bin_length)), 'go')
 hold on
-stem(0:carriers-1, (180/pi)*angle(IFFT_modulation(2,1:carriers)),'b*-');
-stem(0:conjugate_carriers-1, (180/pi)*angle(IFFT_modulation(2,1:conjugate_carriers)),'b*-');
+stem(carriers-1, (180/pi)*angle(IFFT_modulation(2,carriers)),'b*-');
+stem(conjugate_carriers-1, (180/pi)*angle(IFFT_modulation(2,conjugate_carriers)),'b*-');
 axis ([0 IFFT_bin_length -200 +200])
 grid on
 ylabel('Phase (degrees)')
@@ -669,6 +669,23 @@ end
 axis([9 31 y_min y_max])
 
 toc
+
+%===============================================================================
+% 确保所有Figure窗口显示
+%===============================================================================
+% 显示当前figure窗口并刷新所有图形
+drawnow;  % 强制刷新所有图形窗口
+shg;      % 显示当前图形窗口（Show Graph）
+
+% 激活所有已创建的figure窗口，确保它们都可见
+for figNum = 1:13
+    if ishghandle(figNum)
+        figure(figNum);
+        drawnow;
+    end
+end
+
+fprintf('\n所有Figure窗口已创建并显示。\n');
 %===============================================================================
 % 文件结束
 %===============================================================================
