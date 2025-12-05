@@ -1,17 +1,20 @@
-% [脚本标识] test4.m
+% [脚本标识] test6.m
 % - IFFT=1024，GI=72（固定CP长度），使用升余弦加窗（LTE风格）
 % - 频域采用"共轭镜像"映射法，支持完整 BER-SNR 曲线计算
+% - 信道：Jakes瑞利衰落信道 + AWGN加性高斯白噪声信道（使用jakesChannel.m）
+% - 导频辅助信道估计与均衡：使用导频进行信道估计，并进行频域均衡
 % ============================================================================
-% 文件名: test4.m
-% 功能: OFDM系统完整仿真程序（主程序）
+% 文件名: test6.m
+% 功能: OFDM系统完整仿真程序（主程序，含瑞利衰落信道和导频均衡）
 % 描述: 
-%   1. 实现完整的OFDM系统链路：发送端（16QAM调制、IFFT、CP、加窗）→ 
-%      信道（AWGN）→ 接收端（去CP、FFT、16QAM解调）
-%   2. 生成13个Figure进行可视化分析，包括：
+%   1. 实现完整的OFDM系统链路：发送端（16QAM调制、导频插入、IFFT、CP、加窗）→ 
+%      信道（Jakes瑞利衰落 + AWGN，使用jakesChannel.m）→ 接收端（去CP、FFT、信道估计、均衡、16QAM解调）
+%   2. 生成14-15个Figure进行可视化分析，包括：
 %      - 单符号分析与可视化（Figure 1-5）
 %      - 帧级、串行信号与频谱分析（Figure 6-8）
 %      - 信道影响与接收端评估（Figure 12-13）
 %      - 解调判决与性能（Figure 9-11，包含BER-SNR曲线）
+%      - 信道估计与均衡可视化（Figure 14-15，如果使用导频均衡）
 %   3. 计算BER-SNR曲线（10-30dB，步进2dB）
 %   4. 在15dB SNR下进行详细分析，其他SNR仅用于BER计算
 %   5. 采用LTE风格升余弦加窗，符号间重叠相加（重叠区域限制在CP内）
@@ -43,9 +46,11 @@ close all;
 %   Figure 13: 局部窗口双边谱对比
 %
 % 【四】解调判决与性能
-%   Figure 9 : 接收端16QAM星座图
+%   Figure 9 : 接收端16QAM星座图（均衡前）
 %   Figure 10: 比特流发/收前100位对比
 %   Figure 11: BER-SNR曲线（10-30dB，步进2dB）
+%   Figure 14: 信道估计结果可视化（如果使用导频均衡）
+%   Figure 15: 接收端16QAM星座图（均衡后，如果使用导频均衡）
 %
 %==========================================================
 %===============================================================================
@@ -56,14 +61,14 @@ close all;
 subcarrier_spacing = 15e3;         % 子载波间隔：15 kHz
 fs = 15.36e6;                      % 采样频率：15.36 MHz
 
-carrier_count=300;                 % 有效数据子载波数（正频率数据，负频率为镜像）；2*300+1(DC)=601 占用
-symbols_per_frame=50;              % 每帧 OFDM 符号数
-total_symbols=100;                 % 总共要传输的 OFDM 符号数（改为100）
-symbols_per_carrier=total_symbols; % 为兼容后续矩阵尺寸，沿用原变量表示"总符号数"
-bits_per_symbol=4;                 % 每个子载波承载的比特数（4=16QAM）
+carrier_count = 300;                 % 有效数据子载波数（正频率数据，负频率为镜像）；2*300+1(DC)=601 占用
+symbols_per_frame = 50;              % 每帧 OFDM 符号数
+total_symbols = 100;                 % 总共要传输的 OFDM 符号数
+symbols_per_carrier = total_symbols; % 为兼容后续矩阵尺寸，沿用原变量表示"总符号数"
+bits_per_symbol = 4;                 % 每个子载波承载的比特数（4=16QAM）
 
 % IFFT/FFT参数
-IFFT_bin_length=1024;              % IFFT 点数（包含有效、空、镜像与DC）
+IFFT_bin_length = 1024;              % IFFT 点数（包含有效、空、镜像与DC）
 
 % 保护间隔参数
 PrefixRatio = 72/ IFFT_bin_length;  % 循环前缀比例（使 GI 固定为 72）
@@ -75,10 +80,10 @@ GI = 72;                            % 保护前缀长度（样本数，按要求
 % 1. 目的：抑制符号边缘的陡峭跳变，减少带外辐射（频谱泄露）
 % 2. 重叠机制：符号拼接时存在可控的重叠，重叠区域限制在循环前缀（CP）内
 % 3. 不影响有效数据：重叠只在CP内，接收端去除CP时不受影响
-beta=1/16;                         % 加窗滚降系数（过渡带占比，越小过渡越短）
-GIP=beta*(IFFT_bin_length+GI);     % 右端后缀长度：配合窗的尾部过渡
-GIP=min(GIP, GI);                  % LTE要求：后缀长度不超过CP长度，确保重叠区域在CP内
-GIP=floor(GIP);                    % 确保为整数
+beta = 1/16;                         % 加窗滚降系数（过渡带占比，越小过渡越短）
+GIP = beta*(IFFT_bin_length+GI);     % 右端后缀长度：配合窗的尾部过渡
+GIP = min(GIP, GI);                  % LTE要求：后缀长度不超过CP长度，确保重叠区域在CP内
+GIP = floor(GIP);                    % 确保为整数
 
 % 符号交界处幅度问题解决方案（LTE标准方法）
 % ============================================================================
@@ -93,6 +98,19 @@ solution_method = 3;               % 使用LTE标准方法：重叠相加（方�
 % 信道参数
 targetSNRdB = 15;                  % 目标信噪比（dB），用于15dB下的详细分析
 
+% Jakes瑞利衰落信道参数
+use_rayleigh_fading = true;        % 是否使用瑞利衰落信道（true=使用，false=仅AWGN）
+fd = 100;                          % 最大多普勒频移（Hz），典型值：100Hz（对应约30km/h@2.4GHz）
+% 注意：使用jakesChannel.m时，fd参数已内置在jakesChannel.m中（保留此参数用于文档说明）
+N0 = 34;                            % Jakes模型散射体数量（基础振荡器数量），典型值：34
+% 注意：使用jakesChannel.m时，N0参数已内置在jakesChannel.m中（保留此参数用于文档说明）
+
+% 导频参数（用于信道估计和均衡）
+use_pilot_equalization = true;      % 是否使用导频进行信道估计和均衡（true=使用，false=不使用）
+pilot_spacing = 6;                  % 导频间隔（每隔pilot_spacing个子载波插入一个导频）
+pilot_symbol = 1 + 1i*0;            % 导频符号（已知的复数值，归一化功率）
+interpolation_method = 'linear';     % 插值方法：'linear'（线性插值）或'spline'（样条插值）
+
 %===============================================================================
 % 【发送端处理流程】
 %===============================================================================
@@ -100,27 +118,78 @@ targetSNRdB = 15;                  % 目标信噪比（dB），用于15dB下的�
 %------------------------------------------------------------------------------
 % 步骤1: 随机比特流生成
 %------------------------------------------------------------------------------
-baseband_out_length=carrier_count*symbols_per_carrier*bits_per_symbol;
+% 计算实际数据子载波数量（如果使用导频，需要排除导频占用的子载波）
+if use_pilot_equalization
+    % 计算导频位置
+    carriers_temp = (1:carrier_count) + (floor(IFFT_bin_length/4) - floor(carrier_count/2));
+    pilot_positions_temp = 1:pilot_spacing:carrier_count;
+    data_carrier_count_actual = carrier_count - length(pilot_positions_temp);
+else
+    data_carrier_count_actual = carrier_count;
+end
+
+baseband_out_length = data_carrier_count_actual * symbols_per_carrier * bits_per_symbol;
 % 使用基于时间的随机种子，确保每次运行生成不同的随机数据
 rng('shuffle');  % 基于当前时间设置随机种子，确保每次运行都不同
 baseband_out = randi([0 1], 1, baseband_out_length);
 
 %------------------------------------------------------------------------------
-% 步骤2: 16QAM调制
+% 步骤2: 16QAM调制（仅对数据子载波）
 %------------------------------------------------------------------------------
-complex_carrier_matrix=qam16(baseband_out);
-complex_carrier_matrix=reshape(complex_carrier_matrix',carrier_count,symbols_per_carrier)';
+complex_carrier_matrix = qam16(baseband_out);
+complex_carrier_matrix = reshape(complex_carrier_matrix', data_carrier_count_actual, symbols_per_carrier)';
+
+%------------------------------------------------------------------------------
+% 步骤2.5: 导频插入准备（计算导频位置和数据子载波位置）
+%------------------------------------------------------------------------------
+% 子载波索引计算：进行子载波共轭映射，使得OFDM符号经过IFFT之后是实信号
+% 注意：这里carriers指的是原始分配的carrier_count个子载波位置
+carriers = (1:carrier_count) + (floor(IFFT_bin_length/4) - floor(carrier_count/2));
+conjugate_carriers = IFFT_bin_length - carriers + 2;
+
+% 计算导频位置和数据子载波位置
+if use_pilot_equalization
+    % 在carriers范围内，每隔pilot_spacing个子载波插入一个导频
+    pilot_positions_in_carriers = 1:pilot_spacing:carrier_count;  % 导频在carriers中的相对位置
+    pilot_carriers = carriers(pilot_positions_in_carriers);  % 导频的绝对bin位置
+    pilot_conjugate_carriers = conjugate_carriers(pilot_positions_in_carriers);  % 导频的共轭位置
+    
+    % 数据子载波位置（排除导频位置）
+    data_positions_in_carriers = setdiff(1:carrier_count, pilot_positions_in_carriers);
+    data_carriers = carriers(data_positions_in_carriers);  % 数据子载波的绝对bin位置
+    data_conjugate_carriers = conjugate_carriers(data_positions_in_carriers);  % 数据子载波的共轭位置
+    
+    % 验证：数据子载波数量应该等于data_carrier_count_actual
+    pilot_count = length(pilot_positions_in_carriers);
+    
+    % 数据矩阵直接使用complex_carrier_matrix（已经是data_carrier_count_actual大小）
+    data_matrix = complex_carrier_matrix;
+    pilot_matrix = repmat(pilot_symbol, symbols_per_carrier, pilot_count);  % 导频矩阵
+else
+    % 不使用导频，所有子载波都是数据子载波
+    data_carriers = carriers;
+    data_conjugate_carriers = conjugate_carriers;
+    pilot_carriers = [];
+    pilot_conjugate_carriers = [];
+    pilot_count = 0;
+    data_matrix = complex_carrier_matrix;
+    pilot_matrix = [];
+end
 
 %------------------------------------------------------------------------------
 % 步骤3: 频域子载波映射（构造埃尔米特共轭对称，使IFFT输出为实信号）
 %------------------------------------------------------------------------------
-% 子载波索引计算：进行子载波共轭映射，使得OFDM符号经过IFFT之后是实信号
-carriers=(1:carrier_count)+(floor(IFFT_bin_length/4)-floor(carrier_count/2));
-conjugate_carriers=IFFT_bin_length-carriers+2; 
+IFFT_modulation = zeros(symbols_per_carrier, IFFT_bin_length);
 
-IFFT_modulation=zeros(symbols_per_carrier,IFFT_bin_length);
-IFFT_modulation(:,carriers)=complex_carrier_matrix;
-IFFT_modulation(:,conjugate_carriers)=conj(complex_carrier_matrix);
+% 映射数据子载波
+IFFT_modulation(:, data_carriers) = data_matrix;
+IFFT_modulation(:, data_conjugate_carriers) = conj(data_matrix);
+
+% 映射导频子载波（如果使用导频）
+if use_pilot_equalization && pilot_count > 0
+    IFFT_modulation(:, pilot_carriers) = pilot_matrix;
+    IFFT_modulation(:, pilot_conjugate_carriers) = conj(pilot_matrix);
+end
 
 %------------------------------------------------------------------------------
 % 步骤4: IFFT变换（频域 → 时域）
@@ -128,73 +197,73 @@ IFFT_modulation(:,conjugate_carriers)=conj(complex_carrier_matrix);
 % Figure 1: IFFT各频点的幅度（展示激活的子载波与其共轭镜像的幅度分布）
 % - 可直观看到载波分配与未用频点（幅度为0），理解频域输入结构
 figure(1);
-stem(0:IFFT_bin_length-1, abs(IFFT_modulation(2,1:IFFT_bin_length)),'b*-')
-grid on
-axis ([0 IFFT_bin_length -0.5 4.5]);
+stem(0:IFFT_bin_length-1, abs(IFFT_modulation(2, 1:IFFT_bin_length)), 'b*-');
+grid on;
+axis([0 IFFT_bin_length -0.5 4.5]);
 ylabel('Magnitude');
 xlabel('IFFT Bin');
 title('OFDM子载波频率幅度');
- 
+
 % Figure 2: IFFT各频点的相位（度）
 % - 体现共轭映射带来的相位对称性，验证实值时域信号条件
-figure(2);
-plot(0:IFFT_bin_length-1, (180/pi)*angle(IFFT_modulation(2,1:IFFT_bin_length)), 'go')
-hold on
-stem(carriers-1, (180/pi)*angle(IFFT_modulation(2,carriers)),'b*-');
-stem(conjugate_carriers-1, (180/pi)*angle(IFFT_modulation(2,conjugate_carriers)),'b*-');
-axis ([0 IFFT_bin_length -200 +200])
-grid on
-ylabel('Phase (degrees)')
-xlabel('IFFT Bin')
-title('OFDM子载波相位')
+% figure(2);
+% plot(0:IFFT_bin_length-1, (180/pi)*angle(IFFT_modulation(2, 1:IFFT_bin_length)), 'go');
+% hold on;
+% stem(carriers-1, (180/pi)*angle(IFFT_modulation(2, carriers)), 'b*-');
+% stem(conjugate_carriers-1, (180/pi)*angle(IFFT_modulation(2, conjugate_carriers)), 'b*-');
+% axis([0 IFFT_bin_length -200 +200]);
+% grid on;
+% ylabel('Phase (degrees)');
+% xlabel('IFFT Bin');
+% title('OFDM子载波相位');
 
 %------------------------------------------------------------------------------
 % 步骤5: IFFT变换，得到时域OFDM符号（未加保护间隔）
 %------------------------------------------------------------------------------
-signal_after_IFFT=ifft(IFFT_modulation,IFFT_bin_length,2);
-time_wave_matrix=signal_after_IFFT;
+signal_after_IFFT = ifft(IFFT_modulation, IFFT_bin_length, 2);
+time_wave_matrix = signal_after_IFFT;
 
 % Figure 3: 单个OFDM符号（未加循环前缀/后缀）的时域波形
 % - 展示IFFT输出的一个符号周期包络与幅度范围
-figure(3)
-plot(0:IFFT_bin_length-1,time_wave_matrix(2,:));
-axis([0 IFFT_bin_length -0.2 0.2]);
-grid on
-ylabel('Amplitude');
-xlabel('Time');
-title('OFDM时域信号，单符号周期');
+% figure(3);
+% plot(0:IFFT_bin_length-1, time_wave_matrix(2, :));
+% axis([0 IFFT_bin_length -0.2 0.2]);
+% grid on;
+% ylabel('Amplitude');
+% xlabel('Time');
+% title('OFDM时域信号，单符号周期');
 
 %------------------------------------------------------------------------------
 % 步骤6: 添加循环前缀(CP)与后缀
 %------------------------------------------------------------------------------
 % CP作用：对抗多径干扰，保持符号间正交性
 % 后缀作用：用于加窗的平滑过渡，降低频谱旁瓣
-XX=zeros(symbols_per_carrier,IFFT_bin_length+GI+GIP);
-for k=1:symbols_per_carrier
+XX = zeros(symbols_per_carrier, IFFT_bin_length+GI+GIP);
+for k = 1:symbols_per_carrier
     % 符号主体部分（中间）
-    for i=1:IFFT_bin_length
-        XX(k,i+GI)=signal_after_IFFT(k,i);
+    for i = 1:IFFT_bin_length
+        XX(k, i+GI) = signal_after_IFFT(k, i);
     end
     % 循环前缀：将符号尾部复制到开头
-    for i=1:GI
-        XX(k,i)=signal_after_IFFT(k,i+IFFT_bin_length-GI);
+    for i = 1:GI
+        XX(k, i) = signal_after_IFFT(k, i+IFFT_bin_length-GI);
     end
     % 后缀：将符号头部复制到末尾（用于窗的右侧过渡）
-    for j=1:GIP
-         XX(k,IFFT_bin_length+GI+j)=signal_after_IFFT(k,j);
+    for j = 1:GIP
+        XX(k, IFFT_bin_length+GI+j) = signal_after_IFFT(k, j);
     end
-end  
-time_wave_matrix_cp=XX;
+end
+time_wave_matrix_cp = XX;
 
 % Figure 4: 单个OFDM符号添加循环前缀(CP)与后缀后的时域波形
 % - 左侧CP、右端后缀（用于窗口过渡），观察边沿延拓
-figure(4);
-plot(0:size(time_wave_matrix_cp,2)-1, time_wave_matrix_cp(2,:));
-axis([0, size(time_wave_matrix_cp,2), -0.2, 0.2]);
-grid on;
-ylabel('Amplitude');
-xlabel('Time');
-title('OFDM时域信号（含循环前缀），单符号周期');
+% figure(4);
+% plot(0:size(time_wave_matrix_cp,2)-1, time_wave_matrix_cp(2,:));
+% axis([0, size(time_wave_matrix_cp,2), -0.2, 0.2]);
+% grid on;
+% ylabel('Amplitude');
+% xlabel('Time');
+% title('OFDM时域信号（含循环前缀），单符号周期');
 
 %------------------------------------------------------------------------------
 % 步骤7: OFDM符号加窗处理（LTE风格）
@@ -203,7 +272,7 @@ title('OFDM时域信号（含循环前缀），单符号周期');
 % 窗函数覆盖范围：[CP(GI) | 主体(N)]，总长度为 N+GI
 % 窗函数在左边缘（CP开始）和右边缘（主体结束）提供平滑过渡
 % 后缀部分（GIP）用于与下一个符号的CP重叠，实现平滑拼接
-windowed_time_wave_matrix_cp=zeros(symbols_per_carrier,IFFT_bin_length+GI+GIP);
+windowed_time_wave_matrix_cp = zeros(symbols_per_carrier, IFFT_bin_length+GI+GIP);
 
 % 生成升余弦窗函数（覆盖CP+主体部分，长度为N+GI）
 % 注意：rcoswindow返回的长度是(1+beta)*(N+GI)，我们需要只取前N+GI个元素
@@ -228,13 +297,13 @@ end
 % Figure 5: 加窗后的单个OFDM符号时域波形（含CP/后缀）
 % - LTE风格：升余弦窗平滑边沿，降低频谱旁瓣
 % - 窗函数应用于CP+主体部分，后缀部分用于与下一个符号的CP重叠
-figure(5)
-plot(0:IFFT_bin_length-1+GI+GIP,windowed_time_wave_matrix_cp(2,:)); 
-axis([0, IFFT_bin_length-1+GI+GIP, -0.2, 0.2]);
-grid on;
-ylabel('Amplitude');
-xlabel('Time');
-title(sprintf('OFDM时域信号（LTE风格加窗，重叠区域限制在CP内，GIP=%d），单符号周期', GIP));
+% figure(5);
+% plot(0:IFFT_bin_length-1+GI+GIP, windowed_time_wave_matrix_cp(2, :));
+% axis([0, IFFT_bin_length-1+GI+GIP, -0.2, 0.2]);
+% grid on;
+% ylabel('Amplitude');
+% xlabel('Time');
+% title(sprintf('OFDM时域信号（LTE风格加窗，重叠区域限制在CP内，GIP=%d），单符号周期', GIP));
 
 %------------------------------------------------------------------------------
 % 步骤8: 生成发送信号，并串变换（按帧组织，LTE风格重叠相加）
@@ -322,29 +391,28 @@ for f = 1:num_frames
 end
 
 % 逐符号直接串接（含每符号后缀）：用于对比与"未加窗"频谱分析
-Tx_data_withoutwindow = reshape(time_wave_matrix_cp', (total_symbols)*(IFFT_bin_length+GI+GIP), 1)';
+Tx_data_withoutwindow = reshape(time_wave_matrix_cp', total_symbols*(IFFT_bin_length+GI+GIP), 1)';
 
 % 两种串接方式对比（用于Figure 6）
-temp_time_symbol = length(Tx_data_withoutwindow); % 每符号带后缀
-temp_time_frame  = length(Tx_data);               % 每帧一次后缀
+temp_time_symbol = length(Tx_data_withoutwindow);  % 每符号带后缀
+temp_time_frame = length(Tx_data);                 % 每帧一次后缀
 
 % Figure 6: 发送端串行时域信号（两种串接方式对比）
 % - 子图(1): 将每个符号(含CP/后缀)直接串接
 % - 子图(2): 仅在每帧末尾添加一次后缀的加窗串行
-figure (6)
-subplot(2,1,1);
-plot(0:temp_time_symbol-1,Tx_data_withoutwindow);
-grid on
-ylabel('Amplitude (volts)')
-xlabel('Time (samples)')
-title('OFDM时域信号')
-temp_time2 = temp_time_frame;
-subplot(2,1,2);
-plot(0:temp_time2-1,Tx_data);
-grid on
-ylabel('Amplitude (volts)')
-xlabel('Time (samples)')
-title('OFDM时域信号')
+% figure(6)
+% subplot(2, 1, 1);
+% plot(0:temp_time_symbol-1, Tx_data_withoutwindow);
+% grid on;
+% ylabel('Amplitude (volts)');
+% xlabel('Time (samples)');
+% title('OFDM时域信号（逐符号直接串接）');
+% subplot(2, 1, 2);
+% plot(0:temp_time_frame-1, Tx_data);
+% grid on;
+% ylabel('Amplitude (volts)');
+% xlabel('Time (samples)');
+% title('OFDM时域信号（帧级+末尾后缀，LTE风格）');
 %===============================================================================
 % 【信号分析与可视化：局部窗口频谱与时域对比】
 %===============================================================================
@@ -371,27 +439,26 @@ subset_ofdm_window = Tx_data(zs:ze);                      % 加窗信号局部�
 Nfft_no_window = length(subset_ofdm_no_window);
 Nfft_window = length(subset_ofdm_window);
 subset_ofdm_f_no_window = fftshift(fft(subset_ofdm_no_window));
-subset_ofdm_f_log_no_window = 20*log10(abs(subset_ofdm_f_no_window)/max(abs(subset_ofdm_f_no_window)) + eps);
+subset_ofdm_f_log_no_window = 20*log10(abs(subset_ofdm_f_no_window) / max(abs(subset_ofdm_f_no_window)) + eps);
 subset_ofdm_f_window = fftshift(fft(subset_ofdm_window));
-subset_ofdm_f_log_window = 20*log10(abs(subset_ofdm_f_window)/max(abs(subset_ofdm_f_window)) + eps);
+subset_ofdm_f_log_window = 20*log10(abs(subset_ofdm_f_window) / max(abs(subset_ofdm_f_window)) + eps);
 
 %------------------------------------------------------------------------------
 % Figure 7: 加窗前后局部窗口时域对比（与 Figure 12 相同窗口范围）
 %------------------------------------------------------------------------------
-figure (7)
-subplot(2,1,1)
-plot(real(subset_ofdm_no_window), 'b-', 'LineWidth', 1.5)
-grid on
-xlabel('样本点')
-ylabel('幅度')
-title(sprintf('未加窗信号时域 (window [%d:%d])', zs2, ze2))
-
-subplot(2,1,2)
-plot(real(subset_ofdm_window), 'r-', 'LineWidth', 1.5)
-grid on
-xlabel('样本点')
-ylabel('幅度')
-title(sprintf('加窗信号时域 (window [%d:%d])', zs, ze))
+% figure(7)
+% subplot(2, 1, 1);
+% plot(real(subset_ofdm_no_window), 'b-', 'LineWidth', 1.5);
+% grid on;
+% xlabel('样本点');
+% ylabel('幅度');
+% title(sprintf('未加窗信号时域 (window [%d:%d])', zs2, ze2));
+% subplot(2, 1, 2);
+% plot(real(subset_ofdm_window), 'r-', 'LineWidth', 1.5);
+% grid on;
+% xlabel('样本点');
+% ylabel('幅度');
+% title(sprintf('加窗信号时域 (window [%d:%d])', zs, ze));
 
 %------------------------------------------------------------------------------
 % Figure 8: 加窗前后局部窗口频域对比（与 Figure 12 相同窗口范围，双边谱）
@@ -400,33 +467,56 @@ title(sprintf('加窗信号时域 (window [%d:%d])', zs, ze))
 f_norm_no_window = (-Nfft_no_window/2:(Nfft_no_window/2-1))/Nfft_no_window;
 f_norm_window = (-Nfft_window/2:(Nfft_window/2-1))/Nfft_window;
 
-figure(8)
-subplot(2,1,1)
-plot(f_norm_no_window, subset_ofdm_f_log_no_window, 'b-', 'LineWidth', 1.5)
-grid on
-axis([-0.5 0.5 -40 max(subset_ofdm_f_log_no_window)])
-ylabel('幅度 (dB)')
-xlabel('归一化频率 (-0.5..0.5 = ±fs/2)')
-title(sprintf('未加窗信号幅度谱（双边谱，window [%d:%d]）', zs2, ze2))
-
-subplot(2,1,2)
-plot(f_norm_window, subset_ofdm_f_log_window, 'r-', 'LineWidth', 1.5)
-grid on
-axis([-0.5 0.5 -40 max(subset_ofdm_f_log_window)])
-ylabel('幅度 (dB)')
-xlabel('归一化频率 (-0.5..0.5 = ±fs/2)')
-title(sprintf('加窗信号幅度谱（双边谱，window [%d:%d]）', zs, ze))
+% figure(8)
+% subplot(2, 1, 1);
+% plot(f_norm_no_window, subset_ofdm_f_log_no_window, 'b-', 'LineWidth', 1.5);
+% grid on;
+% axis([-0.5 0.5 -40 max(subset_ofdm_f_log_no_window)]);
+% ylabel('幅度 (dB)');
+% xlabel('归一化频率 (-0.5..0.5 = ±fs/2)');
+% title(sprintf('未加窗信号幅度谱（双边谱，window [%d:%d]）', zs2, ze2));
+% subplot(2, 1, 2);
+% plot(f_norm_window, subset_ofdm_f_log_window, 'r-', 'LineWidth', 1.5);
+% grid on;
+% axis([-0.5 0.5 -40 max(subset_ofdm_f_log_window)]);
+% ylabel('幅度 (dB)');
+% xlabel('归一化频率 (-0.5..0.5 = ±fs/2)');
+% title(sprintf('加窗信号幅度谱（双边谱，window [%d:%d]）', zs, ze));
 
 %===============================================================================
-% 【信道传输：AWGN加性高斯白噪声信道】
+% 【信道传输：瑞利衰落信道 + AWGN加性高斯白噪声信道】
 %===============================================================================
-% 噪声功率计算：根据目标SNR和发送信号功率计算噪声方差
-Tx_signal_power=var(Tx_data); % 以加窗后的发送串行为基准计算功率
-linear_SNR=10^(targetSNRdB/10);
-noise_sigma=Tx_signal_power/linear_SNR;
-noise_scale_factor=sqrt(noise_sigma);
-noise=randn(1,length(Tx_data))*noise_scale_factor;
-Rx_data=Tx_data+noise;
+% 步骤1: 生成Jakes瑞利衰落信道（如果启用）
+if use_rayleigh_fading
+    % 调用jakesChannel函数创建瑞利衰落信道对象
+    % 注意：jakesChannel返回comm.RayleighChannel对象，参数已内置在jakesChannel.m中
+    % 参数：fs=15.36e6 Hz, fd=100 Hz, 三径多径配置（频率选择性衰落）
+    rchan = jakesChannel();
+    
+    % 应用瑞利衰落信道：使用comm.RayleighChannel对象
+    % 注意：comm.RayleighChannel需要列向量输入，返回列向量
+    Tx_data_col = Tx_data(:);  % 转换为列向量
+    Rx_faded_col = rchan(Tx_data_col);  % 通过信道传输
+    Rx_faded = Rx_faded_col(:)';  % 转换回行向量
+    
+    % 计算衰落后的信号功率（用于SNR计算）
+    Tx_signal_power = var(Rx_faded);  % 使用衰落后的信号功率计算噪声
+    
+    % 重置信道状态（为下次使用准备）
+    rchan.reset();
+else
+    % 不使用衰落，直接使用原始信号功率
+    Rx_faded = Tx_data;
+    Tx_signal_power = var(Tx_data);
+end
+
+% 步骤2: 添加AWGN噪声
+% 噪声功率计算：根据目标SNR和信号功率计算噪声方差
+linear_SNR = 10^(targetSNRdB/10);
+noise_sigma = Tx_signal_power / linear_SNR;
+noise_scale_factor = sqrt(noise_sigma);
+noise = randn(1, length(Rx_faded)) * noise_scale_factor;
+Rx_data = Rx_faded + noise;
 
 %------------------------------------------------------------------------------
 % 步骤10: 局部窗口时域对比（加噪前后）
@@ -454,10 +544,10 @@ tx_seg = Tx_data(zs:ze);
 rx_seg = Rx_data(zs:ze);
 noise_seg = rx_seg - tx_seg;
 
-sig_power  = mean(tx_seg.^2);
+sig_power = mean(tx_seg.^2);
 noise_power = mean(noise_seg.^2);
 snr_zoom_db = 10*log10(sig_power / max(noise_power, eps));
-mse_zoom = noise_power; % 均方误差=噪声均方功率
+mse_zoom = noise_power;  % 均方误差=噪声均方功率
 
 fprintf('\n==== Zoomed Window Metrics (Figure 12) ====\n');
 fprintf('Window range       : [%d : %d] (length=%d)\n', zs, ze, numel(tx_seg));
@@ -469,32 +559,20 @@ fprintf('===========================================\n');
 
 %------------------------------------------------------------------------------
 % 步骤12: Figure 13 - 与 Figure 12 同一窗口的频谱对比（双边谱）
+% 注意：均衡前的频谱在这里先计算，均衡后的频谱在均衡处理后计算
 %------------------------------------------------------------------------------
 Nfft_zoom = 2^nextpow2(length(tx_seg));
 Tx_Fz = fftshift(fft(tx_seg, Nfft_zoom));
-Rx_Fz = fftshift(fft(rx_seg, Nfft_zoom));
+Rx_Fz_before_eq = fftshift(fft(rx_seg, Nfft_zoom));
 
 % 归一化到自身最大值并转 dB
-Tx_mag_db_z = 20*log10( abs(Tx_Fz)/max(abs(Tx_Fz)) + eps );
-Rx_mag_db_z = 20*log10( abs(Rx_Fz)/max(abs(Rx_Fz)) + eps );
+Tx_mag_db_z = 20*log10(abs(Tx_Fz) / max(abs(Tx_Fz)) + eps);
+Rx_mag_db_z_before_eq = 20*log10(abs(Rx_Fz_before_eq) / max(abs(Rx_Fz_before_eq)) + eps);
 
 % 归一化频率轴：-0.5..0.5（对应 -fs/2..fs/2）
 f_norm_z = (-Nfft_zoom/2:(Nfft_zoom/2-1))/Nfft_zoom;
 
-figure(13);
-subplot(2,1,1);
-plot(f_norm_z, Tx_mag_db_z, 'b');
-grid on;
-ylabel('Magnitude (dB)');
-xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
-title(sprintf('发送信号频谱（双边谱，局部放大 [%d:%d]）', zs, ze));
-
-subplot(2,1,2);
-plot(f_norm_z, Rx_mag_db_z, 'r');
-grid on;
-ylabel('Magnitude (dB)');
-xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
-title(sprintf('接收信号频谱（双边谱，局部放大 [%d:%d]）', zs, ze));
+% Figure 13将在均衡处理后完整绘制（包含均衡后的频谱）
 
 %===============================================================================
 % 【接收端处理流程】
@@ -509,7 +587,7 @@ title(sprintf('接收信号频谱（双边谱，局部放大 [%d:%d]）', zs, ze
 % - 重叠区域不影响有效数据，因为重叠只在CP范围内，主体部分不受影响
 symbol_len = IFFT_bin_length+GI+GIP;  % 每个符号的总长度（含CP+主体+后缀）
 
-Rx_data_matrix=zeros(total_symbols,symbol_len);
+Rx_data_matrix = zeros(total_symbols, symbol_len);
 read_offset = 0;
 for f = 1:num_frames
     frame_rx = Rx_data(read_offset+1:read_offset+frame_len_CP_suffix);
@@ -524,54 +602,206 @@ for f = 1:num_frames
 end
 % LTE原理：去除CP和后缀，只保留主体部分（N个样本）进行FFT解调
 % 重叠区域在CP内，去除CP后不影响有效数据
-Rx_data_complex_matrix=Rx_data_matrix(:,GI+1:IFFT_bin_length+GI); 
+Rx_data_complex_matrix = Rx_data_matrix(:, GI+1:IFFT_bin_length+GI); 
 
 %------------------------------------------------------------------------------
 % 步骤14: FFT解调（时域 → 频域），提取子载波数据
 %------------------------------------------------------------------------------
-Y1=fft(Rx_data_complex_matrix,IFFT_bin_length,2);
-Rx_carriers=Y1(:,carriers);
-Rx_mag=abs(Rx_carriers);
-Rx_phase=angle(Rx_carriers);
+Y1 = fft(Rx_data_complex_matrix, IFFT_bin_length, 2);
+
+%------------------------------------------------------------------------------
+% 步骤14.5: 信道估计与均衡（如果使用导频）
+%------------------------------------------------------------------------------
+% 调用导频均衡函数进行信道估计和均衡
+[Rx_carriers, Rx_carriers_before_eq, H_est_full] = pilot_equalization(...
+    Y1, pilot_carriers, data_carriers, pilot_conjugate_carriers, ...
+    data_conjugate_carriers, pilot_symbol, interpolation_method, ...
+    IFFT_bin_length, symbols_per_carrier, use_pilot_equalization);
+
+Rx_mag = abs(Rx_carriers);
+Rx_phase = angle(Rx_carriers);
 
 % 极坐标转直角坐标
-[M, N]=pol2cart(Rx_phase, Rx_mag); 
+[M, N] = pol2cart(Rx_phase, Rx_mag);
 Rx_complex_carrier_matrix = complex(M, N);
-% Figure 9: 接收端子载波星座图（IQ平面），SNR越高散点越集中于16QAM理想点
+
+% 均衡前的星座图数据（用于对比）
+Rx_mag_before = abs(Rx_carriers_before_eq);
+Rx_phase_before = angle(Rx_carriers_before_eq);
+[M_before, N_before] = pol2cart(Rx_phase_before, Rx_mag_before);
+Rx_complex_carrier_matrix_before_eq = complex(M_before, N_before);
+
+% Figure 9: 接收端16QAM星座图（均衡前）
 figure(9);
-plot(Rx_complex_carrier_matrix,'*b');
+plot(Rx_complex_carrier_matrix_before_eq,'*r', 'MarkerSize', 4);
 axis([-4, 4, -4, 4]);
-title('接收信号16QAM星座图')
-grid on
+grid on;
+xlabel('同相分量 (I)');
+ylabel('正交分量 (Q)');
+if use_pilot_equalization && pilot_count > 0
+    title('接收信号16QAM星座图（均衡前）');
+else
+    title('接收信号16QAM星座图（未均衡）');
+end
+
+% Figure 15: 接收端16QAM星座图（均衡后，如果使用导频均衡）
+if use_pilot_equalization && pilot_count > 0
+    figure(15);
+    plot(Rx_complex_carrier_matrix,'*b', 'MarkerSize', 4);
+    axis([-4, 4, -4, 4]);
+    grid on;
+    xlabel('同相分量 (I)');
+    ylabel('正交分量 (Q)');
+    title('接收信号16QAM星座图（导频均衡后）');
+end
+
+%------------------------------------------------------------------------------
+% 步骤12.5: Figure 13 - 频谱对比（包含均衡后的频谱，如果使用导频均衡）
+%------------------------------------------------------------------------------
+% 重构均衡后的完整频域信号（用于时域重构）
+if use_pilot_equalization && pilot_count > 0 && ~isempty(H_est_full)
+    % 重构均衡后的完整IFFT输入（包括所有子载波）
+    Y1_eq_full = zeros(symbols_per_carrier, IFFT_bin_length);
+    
+    % 映射均衡后的数据子载波（Rx_carriers就是均衡后的数据子载波）
+    Y1_eq_full(:, data_carriers) = Rx_carriers;
+    Y1_eq_full(:, data_conjugate_carriers) = conj(Rx_carriers);
+    
+    % 映射导频位置（均衡后的导频，应该恢复为原始导频值）
+    Y1_eq_full(:, pilot_carriers) = repmat(pilot_symbol, symbols_per_carrier, pilot_count);
+    Y1_eq_full(:, pilot_conjugate_carriers) = conj(repmat(pilot_symbol, symbols_per_carrier, pilot_count));
+    
+    % DC子载波设为0
+    Y1_eq_full(:, 1) = 0;
+    
+    % IFFT得到均衡后的时域信号（每个符号）
+    Rx_data_eq_matrix = ifft(Y1_eq_full, IFFT_bin_length, 2);
+    
+    % 重构均衡后的完整时域信号（串行，简化处理：直接串接符号主体，用于频谱显示）
+    % 注意：这里简化处理，只重构主体部分用于频谱对比
+    Rx_data_eq = zeros(1, symbols_per_carrier * IFFT_bin_length);
+    for sym_idx = 1:symbols_per_carrier
+        start_idx = (sym_idx - 1) * IFFT_bin_length + 1;
+        end_idx = sym_idx * IFFT_bin_length;
+        Rx_data_eq(start_idx:end_idx) = Rx_data_eq_matrix(sym_idx, :);
+    end
+    
+    % 计算对应的局部窗口位置（简化：假设窗口在符号主体范围内）
+    % 将zs:ze映射到均衡后信号的位置
+    % 由于均衡后信号只有主体部分，需要调整窗口位置
+    zs_eq = max(1, floor(length(Rx_data_eq)/2) - floor(zoom_len/2));
+    ze_eq = min(length(Rx_data_eq), zs_eq + zoom_len - 1);
+    
+    % 提取均衡后信号的局部窗口
+    rx_seg_eq = Rx_data_eq(zs_eq:ze_eq);
+    
+    % 计算均衡后信号的频谱
+    Rx_Fz_after_eq = fftshift(fft(rx_seg_eq, Nfft_zoom));
+    Rx_mag_db_z_after_eq = 20*log10(abs(Rx_Fz_after_eq) / max(abs(Rx_Fz_after_eq)) + eps);
+    
+    % Figure 13: 频谱对比（发送、接收均衡前、接收均衡后）
+    figure(13);
+    subplot(3, 1, 1);
+    plot(f_norm_z, Tx_mag_db_z, 'b', 'LineWidth', 1.5);
+    grid on;
+    ylabel('Magnitude (dB)');
+    xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
+    title(sprintf('发送信号频谱（双边谱，局部放大 [%d:%d]）', zs, ze));
+    
+    subplot(3, 1, 2);
+    plot(f_norm_z, Rx_mag_db_z_before_eq, 'r', 'LineWidth', 1.5);
+    grid on;
+    ylabel('Magnitude (dB)');
+    xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
+    title(sprintf('接收信号频谱（均衡前，局部放大 [%d:%d]）', zs, ze));
+    
+    subplot(3, 1, 3);
+    plot(f_norm_z, Rx_mag_db_z_after_eq, 'g', 'LineWidth', 1.5);
+    grid on;
+    ylabel('Magnitude (dB)');
+    xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
+    title(sprintf('接收信号频谱（导频均衡后，局部放大 [%d:%d]）', zs, ze));
+else
+    % 不使用均衡，只显示发送和接收频谱
+    figure(13);
+    subplot(2, 1, 1);
+    plot(f_norm_z, Tx_mag_db_z, 'b', 'LineWidth', 1.5);
+    grid on;
+    ylabel('Magnitude (dB)');
+    xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
+    title(sprintf('发送信号频谱（双边谱，局部放大 [%d:%d]）', zs, ze));
+    
+    subplot(2, 1, 2);
+    plot(f_norm_z, Rx_mag_db_z_before_eq, 'r', 'LineWidth', 1.5);
+    grid on;
+    ylabel('Magnitude (dB)');
+    xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
+    title(sprintf('接收信号频谱（未均衡，局部放大 [%d:%d]）', zs, ze));
+end
+
+% Figure 14: 信道估计结果可视化（如果使用导频均衡）
+if use_pilot_equalization && pilot_count > 0 && ~isempty(H_est_full)
+    figure(14);
+    % 选择一个符号进行可视化（例如第2个符号）
+    sym_idx_plot = min(2, symbols_per_carrier);
+    
+    % 提取该符号的信道估计
+    H_est_plot = H_est_full(sym_idx_plot, data_carriers);
+    H_pilot_plot = H_est_full(sym_idx_plot, pilot_carriers);
+    
+    % 子图1：信道幅度响应
+    subplot(2, 1, 1);
+    plot(data_carriers, abs(H_est_plot), 'b-', 'LineWidth', 1.5);
+    hold on;
+    stem(pilot_carriers, abs(H_pilot_plot), 'ro', 'LineWidth', 1.5, 'MarkerSize', 8);
+    hold off;
+    grid on;
+    xlabel('子载波索引 (IFFT Bin)');
+    ylabel('信道幅度');
+    title(sprintf('信道估计幅度响应（符号 %d，导频位置用红色标记）', sym_idx_plot));
+    legend('插值估计', '导频估计', 'Location', 'best');
+    
+    % 子图2：信道相位响应
+    subplot(2, 1, 2);
+    plot(data_carriers, angle(H_est_plot)*180/pi, 'b-', 'LineWidth', 1.5);
+    hold on;
+    stem(pilot_carriers, angle(H_pilot_plot)*180/pi, 'ro', 'LineWidth', 1.5, 'MarkerSize', 8);
+    hold off;
+    grid on;
+    xlabel('子载波索引 (IFFT Bin)');
+    ylabel('信道相位 (度)');
+    title(sprintf('信道估计相位响应（符号 %d，导频位置用红色标记）', sym_idx_plot));
+    legend('插值估计', '导频估计', 'Location', 'best');
+end
 
 %------------------------------------------------------------------------------
 % 步骤15: 16QAM解调（最小欧氏距离判决）
 %------------------------------------------------------------------------------
-Rx_serial_complex_symbols = reshape(Rx_complex_carrier_matrix',size(Rx_complex_carrier_matrix, 1)*size(Rx_complex_carrier_matrix,2),1)' ; 
-Rx_decoded_binary_symbols=demoduqam16(Rx_serial_complex_symbols);
+Rx_serial_complex_symbols = reshape(Rx_complex_carrier_matrix', size(Rx_complex_carrier_matrix, 1)*size(Rx_complex_carrier_matrix, 2), 1)';
+Rx_decoded_binary_symbols = demoduqam16(Rx_serial_complex_symbols);
 baseband_in = Rx_decoded_binary_symbols;
 % Figure 10: 比特流对比（前100比特）——上:发送，下:接收判决
 figure(10);
-subplot(2,1,1);
+subplot(2, 1, 1);
 stem(baseband_out(1:100));
-title('发送比特流（前100位）')
-subplot(2,1,2);
+title('发送比特流（前100位）');
+subplot(2, 1, 2);
 stem(baseband_in(1:100));
-title('接收比特流（前100位）')
+title('接收比特流（前100位）');
 %------------------------------------------------------------------------------
 % 步骤16: 误码率计算（15dB，用于显示摘要）
 %------------------------------------------------------------------------------
-bit_errors=find(baseband_in ~=baseband_out);
-bit_error_count = size(bit_errors, 2); 
-ber_15dB=bit_error_count/baseband_out_length;
+bit_errors = find(baseband_in ~= baseband_out);
+bit_error_count = size(bit_errors, 2);
+ber_15dB = bit_error_count / baseband_out_length;
 
 %------------------------------------------------------------------------------
 % 步骤17: 命令行输出关键指标
 %------------------------------------------------------------------------------
 % 统计：占用与保护子载波（按要求口径：占用=含DC，保护=其余）
-occupied_including_dc = 2*carrier_count + 1;          % 601
+occupied_including_dc = 2*carrier_count + 1;          % 601（含DC）
 guard_subcarriers = IFFT_bin_length - occupied_including_dc; % 423
-null_subcarriers = guard_subcarriers; % 与“保护子载波”口径一致
+null_subcarriers = guard_subcarriers;                 % 与"保护子载波"口径一致
 
 fprintf('\n==== Simulation Summary (SNR = %.2f dB) ====\n', targetSNRdB);
 fprintf('Total symbols     : %d\n', total_symbols);
@@ -590,6 +820,22 @@ fprintf('Window roll-off   : 1/%d\n', round(1/beta));
 fprintf('Solution method   : %d (LTE风格：重叠相加，重叠区域限制在CP内)\n', solution_method);
 fprintf('Overlap length    : %d samples (GIP <= GI，限制在CP内)\n', GIP);
 fprintf('Symbols per frame : %d\n', symbols_per_carrier);
+if use_rayleigh_fading
+    fprintf('Channel type      : Jakes Rayleigh Fading + AWGN\n');
+    fprintf('Max Doppler (fd)  : %.1f Hz\n', fd);
+    fprintf('Scatterers (N0)   : %d\n', N0);
+else
+    fprintf('Channel type      : AWGN only\n');
+end
+if use_pilot_equalization && pilot_count > 0
+    fprintf('Pilot equalization: Enabled\n');
+    fprintf('Pilot spacing      : %d subcarriers\n', pilot_spacing);
+    fprintf('Pilot count        : %d per symbol\n', pilot_count);
+    fprintf('Data carriers      : %d per symbol\n', data_carrier_count_actual);
+    fprintf('Interpolation      : %s\n', interpolation_method);
+else
+    fprintf('Pilot equalization: Disabled\n');
+end
 fprintf('==============================\n\n');
 
 %===============================================================================
@@ -605,14 +851,34 @@ for idx = 1:length(SNR_range)
     snr_dB = SNR_range(idx);
     
     %--------------------------------------------------------------------------
-    % 对每个SNR点：重新计算噪声并添加到发送信号
-    % 每次调用 randn() 都会生成新的随机噪声样本，确保每次运行都不同
+    % 对每个SNR点：重新生成衰落信道和噪声
+    % 每次调用都会生成新的随机信道和噪声样本，确保每次运行都不同
     %--------------------------------------------------------------------------
+    % 步骤1: 生成Jakes瑞利衰落信道（如果启用）
+    if use_rayleigh_fading
+        % 为每个SNR点创建新的衰落信道对象（模拟时变信道）
+        % 使用jakesChannel函数创建comm.RayleighChannel对象
+        rchan_loop = jakesChannel();
+        
+        % 应用瑞利衰落信道：使用comm.RayleighChannel对象
+        Tx_data_col_loop = Tx_data(:);  % 转换为列向量
+        Rx_faded_col_loop = rchan_loop(Tx_data_col_loop);  % 通过信道传输
+        Rx_faded_loop = Rx_faded_col_loop(:)';  % 转换回行向量
+        
+        % 使用衰落后的信号功率计算噪声
+        Tx_signal_power_loop = var(Rx_faded_loop);
+    else
+        % 不使用衰落
+        Rx_faded_loop = Tx_data;
+        Tx_signal_power_loop = var(Tx_data);
+    end
+    
+    % 步骤2: 添加AWGN噪声
     linear_SNR = 10^(snr_dB/10);
-    noise_sigma_loop = Tx_signal_power/linear_SNR;
+    noise_sigma_loop = Tx_signal_power_loop/linear_SNR;
     noise_scale_factor_loop = sqrt(noise_sigma_loop);
-    noise_loop = randn(1, length(Tx_data)) * noise_scale_factor_loop;
-    Rx_data_loop = Tx_data + noise_loop;
+    noise_loop = randn(1, length(Rx_faded_loop)) * noise_scale_factor_loop;
+    Rx_data_loop = Rx_faded_loop + noise_loop;
     
     % 接收端串并转换（按帧）去除循环前缀和后缀（LTE风格）
     symbol_len_loop = IFFT_bin_length+GI+GIP;  % 每个符号的总长度（含CP+主体+后缀）
@@ -631,11 +897,18 @@ for idx = 1:length(SNR_range)
         read_offset = read_offset + frame_len_CP_suffix;
     end
     % LTE原理：去除CP和后缀，只保留主体部分（N个样本）进行FFT解调
-    Rx_data_complex_matrix_loop = Rx_data_matrix_loop(:,GI+1:IFFT_bin_length+GI);
+    Rx_data_complex_matrix_loop = Rx_data_matrix_loop(:, GI+1:IFFT_bin_length+GI);
     
     % FFT解调，提取子载波数据
     Y1_loop = fft(Rx_data_complex_matrix_loop, IFFT_bin_length, 2);
-    Rx_carriers_loop = Y1_loop(:,carriers);
+    
+    % 信道估计与均衡（如果使用导频）
+    % 调用导频均衡函数进行信道估计和均衡
+    [Rx_carriers_loop, ~, ~] = pilot_equalization(...
+        Y1_loop, pilot_carriers, data_carriers, pilot_conjugate_carriers, ...
+        data_conjugate_carriers, pilot_symbol, interpolation_method, ...
+        IFFT_bin_length, total_symbols, use_pilot_equalization);
+    
     Rx_mag_loop = abs(Rx_carriers_loop);
     Rx_phase_loop = angle(Rx_carriers_loop);
     [M_loop, N_loop] = pol2cart(Rx_phase_loop, Rx_mag_loop);
@@ -667,7 +940,7 @@ semilogy(SNR_range, ber_plot, 'b-o', 'LineWidth', 1.5, 'MarkerSize', 6);
 xlabel('SNR (dB)');
 ylabel('BER');
 title('OFDM系统误码率性能');
-grid on
+grid on;
 
 % 设置合理的轴范围
 non_zero_ber = ber_results(ber_results > 0);
@@ -681,34 +954,9 @@ end
 axis([9 31 y_min y_max])
 
 toc
-
-%===============================================================================
-% 确保所有Figure窗口显示
-%===============================================================================
-% 显示当前figure窗口并刷新所有图形
-drawnow;  % 强制刷新所有图形窗口
-shg;      % 显示当前图形窗口（Show Graph）
-
-% 激活所有已创建的figure窗口，确保它们都可见
-for figNum = 1:13
-    if ishghandle(figNum)
-        figure(figNum);
-        drawnow;
-    end
-end
-
-fprintf('\n所有Figure窗口已创建并显示。\n');
 %===============================================================================
 % 文件结束
 %===============================================================================
-
-
-
-
-
-
-
-
 
 
 
