@@ -52,10 +52,10 @@ fprintf('========== 连续小波变换（CWT）分析 ==========\n');
 % 注意：
 %   - 'morl': Morlet小波（最常用）
 %   - 'cmor1-1.5': 复Morlet小波，格式为 'cmor带宽-中心频率'
-%   - 'cgau1-1': 复高斯小波，格式为 'cgau阶数-参数'
+%   - 'cgau1': 复高斯小波，格式为 'cgau阶数'（1-8）
 %   - 'mexh': Mexican Hat小波
 %   - 'gaus1': 高斯小波，格式为 'gaus阶数'（1-8）
-wavelets = {'morl', 'cmor1-1.5', 'cgau1-1', 'mexh', 'gaus1'};
+wavelets = {'morl', 'cmor1-1.5', 'cgau1', 'mexh', 'gaus1'};
 wavelet_names = {'Morlet', '复Morlet', '复高斯', 'Mexican Hat', '高斯'};
 
 % 选择小波基
