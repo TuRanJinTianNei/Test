@@ -1,25 +1,30 @@
 {
-  // 设置 .md 文件默认使用 Vditor 编辑器打开（带工具栏的 Markdown 编辑器）
-  // Vditor 编辑器 ID 通常是以下之一，根据你安装的扩展而定：
-  // 选项1: 如果安装了 Vditor 扩展
+  // 设置 .md 文件默认使用 Markdown Editor 打开
+  // 如果下面的配置不生效，可以通过右键菜单设置：
+  // 右键 .md 文件 -> "打开方式..." -> 选择 "markdown editor" -> 点击 "配置默认编辑器..."
   "workbench.editorAssociations": {
-    "*.md": "vditor.editor"
+    "*.md": "vscode.markdown.preview.editor"
   },
   
-  // 如果上面的不生效，可以尝试以下选项：
-  // 选项2: 尝试其他可能的 Vditor 编辑器 ID
+  // 如果上面的不生效，可以尝试以下选项（根据你安装的扩展而定）：
+  // 选项1: Markdown Editor 扩展（常见）
   // "workbench.editorAssociations": {
-  //   "*.md": "vditor"
+  //   "*.md": "markdown.editor"
   // }
   
-  // 选项3: 如果安装了 Markdown Preview Enhanced
+  // 选项2: Markdown Preview Enhanced
   // "workbench.editorAssociations": {
   //   "*.md": "markdown.preview.editor"
   // }
   
-  // 选项4: 使用内置预览编辑器
+  // 选项3: 使用内置预览编辑器
   // "workbench.editorAssociations": {
   //   "*.md": "vscode.markdown.preview.editor"
+  // }
+  
+  // 选项4: Vditor 编辑器
+  // "workbench.editorAssociations": {
+  //   "*.md": "vditor.editor"
   // }
   
   // Markdown 预览相关设置
