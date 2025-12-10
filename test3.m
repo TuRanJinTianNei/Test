@@ -558,250 +558,68 @@ fprintf('MSE (Tx vs Rx)     : %.6g\n', mse_zoom);
 fprintf('===========================================\n');
 
 %------------------------------------------------------------------------------
+% 步骤11.5: 使用method.m对接收信号进行带宽估计（两种算法）
+%------------------------------------------------------------------------------
+fprintf('\n==== 接收信号带宽估计（method.m）====\n');
+
+% 计算理论带宽
+B_ideal = carrier_count * subcarrier_spacing;  % 300 * 15e3 = 4.5 MHz
+fprintf('理论带宽 B_ideal: %.6f Hz (%.3f MHz)\n', B_ideal, B_ideal/1e6);
+
+% 使用method.m对接收信号进行带宽估计
+% 注意：使用目标SNR（targetSNRdB）进行AR模型法的阈值选择
+try
+    [B_welch, B_ar] = method(Rx_data, fs, targetSNRdB);
+    
+    % 计算Welch算法估计带宽的误差
+    error_welch = abs(B_welch - B_ideal);
+    error_welch_percent = (error_welch / B_ideal) * 100;
+    
+    % 计算AR模型法估计带宽的误差
+    error_ar = abs(B_ar - B_ideal);
+    error_ar_percent = (error_ar / B_ideal) * 100;
+    
+    % 输出结果
+    fprintf('\n【Welch算法估计结果】\n');
+    fprintf('估计带宽 B_welch: %.6f Hz (%.3f MHz)\n', B_welch, B_welch/1e6);
+    fprintf('绝对误差        : %.6f Hz (%.3f MHz)\n', error_welch, error_welch/1e6);
+    fprintf('相对误差        : %.2f%%\n', error_welch_percent);
+    
+    fprintf('\n【AR模型法估计结果】\n');
+    fprintf('估计带宽 B_ar   : %.6f Hz (%.3f MHz)\n', B_ar, B_ar/1e6);
+    fprintf('绝对误差        : %.6f Hz (%.3f MHz)\n', error_ar, error_ar/1e6);
+    fprintf('相对误差        : %.2f%%\n', error_ar_percent);
+    
+    fprintf('\n【方法对比】\n');
+    if error_welch < error_ar
+        fprintf('Welch算法估计更准确（误差更小）\n');
+    elseif error_ar < error_welch
+        fprintf('AR模型法估计更准确（误差更小）\n');
+    else
+        fprintf('两种方法估计精度相同\n');
+    end
+    
+catch ME
+    fprintf('警告：带宽估计失败，错误信息：%s\n', ME.message);
+    fprintf('可能原因：method.m函数调用失败或缺少必要的工具箱\n');
+end
+
+fprintf('==========================================\n\n');
+
+%------------------------------------------------------------------------------
 % 步骤12: Figure 13 - 与 Figure 12 同一窗口的频谱对比（双边谱）
 % 注意：均衡前的频谱在这里先计算，均衡后的频谱在均衡处理后计算
-% 使用 Welch 周期图算法进行功率谱估计
 %------------------------------------------------------------------------------
-% Welch 周期图算法参数（注意：避免与后续pol2cart的M、N变量冲突）
-M_seg = 256;                    % 子段长度（样本数）
-K_overlap = M_seg / 2;          % 重叠长度（通常为 M_seg/2，50%重叠）
-N_seg = length(tx_seg);         % 信号总长度
+Nfft_zoom = 2^nextpow2(length(tx_seg));
+Tx_Fz = fftshift(fft(tx_seg, Nfft_zoom));
+Rx_Fz_before_eq = fftshift(fft(rx_seg, Nfft_zoom));
 
-% 计算分段数：L = (N - K) / (M - K)
-L = floor((N_seg - K_overlap) / (M_seg - K_overlap));  % 实际分段数
-
-% FFT点数（选择不小于M_seg的2的幂次）
-Nfft_zoom = 2^nextpow2(M_seg);
-
-% 生成 Hamming 窗
-hamming_win = hamming(M_seg);
-
-% 计算窗函数的归一化因子：U = (1/M_seg) * sum(h^2(n))
-U = mean(hamming_win.^2);
-
-%------------------------------------------------------------------------------
-% Welch算法：对发送信号进行功率谱估计
-%------------------------------------------------------------------------------
-Tx_periodograms = zeros(L, Nfft_zoom);  % 存储每段的周期图
-
-for l = 1:L
-    % 计算当前段的起始和结束索引
-    start_idx = 1 + (l-1) * (M_seg - K_overlap);
-    end_idx = start_idx + M_seg - 1;
-    
-    % 提取当前段数据
-    if end_idx <= N_seg
-        segment = tx_seg(start_idx:end_idx);
-        
-        % 加窗
-        windowed_segment = segment .* hamming_win(:)';
-        
-        % 计算FFT（周期图）
-        X_seg = fft(windowed_segment, Nfft_zoom);
-        
-        % 计算周期图：P = |X|^2 / (M_seg * U)
-        Tx_periodograms(l, :) = abs(X_seg).^2 / (M_seg * U);
-    end
-end
-
-% 平均所有周期图得到最终功率谱估计
-Tx_PSD_welch = mean(Tx_periodograms, 1);
-Tx_PSD_welch = fftshift(Tx_PSD_welch);  % 转换为双边谱
-
-% 转换为dB：PSD_dB = 10*log10(PSD)
-Tx_mag_db_z = 10*log10(Tx_PSD_welch + eps);
-
-%------------------------------------------------------------------------------
-% Welch算法：对接收信号（均衡前）进行功率谱估计
-%------------------------------------------------------------------------------
-Rx_periodograms_before_eq = zeros(L, Nfft_zoom);
-
-for l = 1:L
-    start_idx = 1 + (l-1) * (M_seg - K_overlap);
-    end_idx = start_idx + M_seg - 1;
-    
-    if end_idx <= N_seg
-        segment = rx_seg(start_idx:end_idx);
-        windowed_segment = segment .* hamming_win(:)';
-        X_seg = fft(windowed_segment, Nfft_zoom);
-        Rx_periodograms_before_eq(l, :) = abs(X_seg).^2 / (M_seg * U);
-    end
-end
-
-Rx_PSD_welch_before_eq = mean(Rx_periodograms_before_eq, 1);
-Rx_PSD_welch_before_eq = fftshift(Rx_PSD_welch_before_eq);
-Rx_mag_db_z_before_eq = 10*log10(Rx_PSD_welch_before_eq + eps);
+% 归一化到自身最大值并转 dB
+Tx_mag_db_z = 20*log10(abs(Tx_Fz) / max(abs(Tx_Fz)) + eps);
+Rx_mag_db_z_before_eq = 20*log10(abs(Rx_Fz_before_eq) / max(abs(Rx_Fz_before_eq)) + eps);
 
 % 归一化频率轴：-0.5..0.5（对应 -fs/2..fs/2）
 f_norm_z = (-Nfft_zoom/2:(Nfft_zoom/2-1))/Nfft_zoom;
-
-%------------------------------------------------------------------------------
-% 【原Periodogram方法计算（用于对比）】
-%------------------------------------------------------------------------------
-% 原方法：单次FFT，归一化幅度谱
-Nfft_periodogram = 2^nextpow2(N_seg);  % 使用信号总长度
-Tx_Fz_periodogram = fftshift(fft(tx_seg, Nfft_periodogram));
-Rx_Fz_periodogram = fftshift(fft(rx_seg, Nfft_periodogram));
-
-% 归一化到最大值并转dB（原方法）
-Tx_mag_db_periodogram = 20*log10(abs(Tx_Fz_periodogram) / max(abs(Tx_Fz_periodogram)) + eps);
-Rx_mag_db_periodogram = 20*log10(abs(Rx_Fz_periodogram) / max(abs(Rx_Fz_periodogram)) + eps);
-
-% 原方法的频率轴
-f_norm_periodogram = (-Nfft_periodogram/2:(Nfft_periodogram/2-1))/Nfft_periodogram;
-
-% 为了对比，将Welch结果插值到原方法的频率分辨率
-% 或者将原方法结果插值到Welch的频率分辨率（选择后者，因为Welch的频率点数更少）
-Tx_mag_db_periodogram_interp = interp1(f_norm_periodogram, Tx_mag_db_periodogram, f_norm_z, 'linear', -100);
-Rx_mag_db_periodogram_interp = interp1(f_norm_periodogram, Rx_mag_db_periodogram, f_norm_z, 'linear', -100);
-
-% 输出Welch算法参数
-fprintf('\n==== Welch周期图算法参数 ====\n');
-fprintf('信号长度 N        : %d 样本\n', N_seg);
-fprintf('子段长度 M_seg    : %d 样本\n', M_seg);
-fprintf('重叠长度 K_overlap: %d 样本 (%.1f%%)\n', K_overlap, K_overlap/M_seg*100);
-fprintf('分段数 L          : %d 段\n', L);
-fprintf('FFT点数           : %d\n', Nfft_zoom);
-fprintf('窗函数归一化因子 U: %.6f\n', U);
-fprintf('频率分辨率        : %.6f (归一化频率)\n', 1/Nfft_zoom);
-fprintf('==========================================\n');
-
-%------------------------------------------------------------------------------
-% 【方法对比说明：Welch方法 vs 原Periodogram方法】
-%------------------------------------------------------------------------------
-fprintf('\n==== 功率谱估计方法对比：Welch vs Periodogram =====\n');
-fprintf('\n【原Periodogram方法（单次FFT）】\n');
-fprintf('  实现方式：\n');
-fprintf('    - 对整段信号进行一次FFT：X = fft(x, N)\n');
-fprintf('    - 计算功率谱：P = |X|^2 / N（或归一化到最大值）\n');
-fprintf('    - 公式：P(k) = (1/N) * |X(k)|^2\n');
-fprintf('  特点：\n');
-fprintf('    ✓ 计算简单快速（只需1次FFT）\n');
-fprintf('    ✓ 频率分辨率高（由信号总长度N决定）\n');
-fprintf('    ✗ 估计方差大（Var[P] ∝ P^2，不随N减小）\n');
-fprintf('    ✗ 频谱泄漏严重（无窗函数平滑）\n');
-fprintf('    ✗ 不适合短数据或噪声较大的信号\n');
-fprintf('\n【Welch方法（分段平均）】\n');
-fprintf('  实现方式：\n');
-fprintf('    - 将信号分成L段，每段长度M，重叠K点\n');
-fprintf('    - 对每段加窗后计算周期图：P_l = |X_l|^2 / (M*U)\n');
-fprintf('    - 平均所有周期图：P_welch = (1/L) * Σ P_l\n');
-fprintf('    - 公式：P_welch(k) = (1/L) * Σ_{l=1}^L |X_l(k)|^2 / (M*U)\n');
-fprintf('  特点：\n');
-fprintf('    ✓ 估计方差小（Var[P_welch] ≈ Var[P]/L，降低L倍）\n');
-fprintf('    ✓ 频谱泄漏小（Hamming窗抑制旁瓣）\n');
-fprintf('    ✓ 适合噪声信号和短数据\n');
-fprintf('    ✓ 平滑性好（通过平均减少波动）\n');
-fprintf('    ✗ 计算复杂度高（需要L次FFT）\n');
-fprintf('    ✗ 频率分辨率降低（由M而非N决定）\n');
-fprintf('\n【本实现中的具体对比】\n');
-fprintf('  原方法：\n');
-fprintf('    - FFT点数：Nfft = 2^nextpow2(length(signal))\n');
-fprintf('    - 功率谱：P = |X|^2 / max(|X|)  [归一化幅度谱]\n');
-fprintf('    - 输出：20*log10(P) [dB]\n');
-fprintf('  Welch方法：\n');
-fprintf('    - 子段长度：M_seg = %d 样本\n', M_seg);
-fprintf('    - 重叠率：%.1f%%\n', K_overlap/M_seg*100);
-fprintf('    - 分段数：L = %d 段\n', L);
-fprintf('    - FFT点数：Nfft = %d（每段）\n', Nfft_zoom);
-fprintf('    - 功率谱：P = mean(|X_l|^2) / (M_seg*U)  [真实PSD]\n');
-fprintf('    - 输出：10*log10(P) [dB]\n');
-fprintf('\n【方差对比】\n');
-fprintf('  原Periodogram：Var[P] ≈ P^2（不随数据长度减小）\n');
-fprintf('  Welch方法：Var[P_welch] ≈ P^2 / L ≈ P^2 / %d\n', L);
-fprintf('  方差降低倍数：约 %.1f 倍\n', L);
-fprintf('\n【频率分辨率对比】\n');
-fprintf('  原Periodogram：Δf = fs / N ≈ %.6f Hz（假设fs=15.36MHz）\n', 15.36e6/N_seg);
-fprintf('  Welch方法：Δf = fs / M_seg ≈ %.6f Hz\n', 15.36e6/M_seg);
-fprintf('  分辨率变化：%.2fx（分辨率降低）\n', N_seg/M_seg);
-fprintf('\n【计算复杂度对比】\n');
-fprintf('  原Periodogram：O(N*log2(N))，1次FFT\n');
-fprintf('  Welch方法：O(L*M_seg*log2(M_seg))，%d次FFT\n', L);
-fprintf('  计算量增加：约 %.1fx（但方差显著降低）\n', L);
-fprintf('==========================================================\n\n');
-
-%------------------------------------------------------------------------------
-% 【Figure 16: 功率谱估计方法对比（Welch vs Periodogram）】
-%------------------------------------------------------------------------------
-figure(16);
-set(gcf, 'Position', [400, 400, 1600, 1000]);
-
-% 子图1：发送信号功率谱对比
-subplot(2, 2, 1);
-plot(f_norm_z, Tx_mag_db_periodogram_interp, 'b--', 'LineWidth', 1.5);
-hold on;
-plot(f_norm_z, Tx_mag_db_z, 'r-', 'LineWidth', 2);
-grid on;
-xlabel('归一化频率 (-0.5..0.5 = ±fs/2)', 'FontSize', 12);
-ylabel('幅度/功率谱 (dB)', 'FontSize', 12);
-title('发送信号功率谱对比（Welch vs Periodogram）', 'FontSize', 14);
-legend('Periodogram方法（单次FFT）', 'Welch方法（分段平均）', 'Location', 'best');
-axis([-0.5 0.5 -80 10]);
-hold off;
-
-% 子图2：接收信号功率谱对比（均衡前）
-subplot(2, 2, 2);
-plot(f_norm_z, Rx_mag_db_periodogram_interp, 'b--', 'LineWidth', 1.5);
-hold on;
-plot(f_norm_z, Rx_mag_db_z_before_eq, 'r-', 'LineWidth', 2);
-grid on;
-xlabel('归一化频率 (-0.5..0.5 = ±fs/2)', 'FontSize', 12);
-ylabel('幅度/功率谱 (dB)', 'FontSize', 12);
-title('接收信号功率谱对比（均衡前，Welch vs Periodogram）', 'FontSize', 14);
-legend('Periodogram方法（单次FFT）', 'Welch方法（分段平均）', 'Location', 'best');
-axis([-0.5 0.5 -80 10]);
-hold off;
-
-% 子图3：局部放大对比（发送信号，显示平滑性差异）
-subplot(2, 2, 3);
-freq_range_idx = abs(f_norm_z) <= 0.1;  % 只显示低频部分
-plot(f_norm_z(freq_range_idx), Tx_mag_db_periodogram_interp(freq_range_idx), 'b--', 'LineWidth', 1.5);
-hold on;
-plot(f_norm_z(freq_range_idx), Tx_mag_db_z(freq_range_idx), 'r-', 'LineWidth', 2);
-grid on;
-xlabel('归一化频率', 'FontSize', 12);
-ylabel('幅度/功率谱 (dB)', 'FontSize', 12);
-title('发送信号功率谱对比（局部放大，显示平滑性）', 'FontSize', 14);
-legend('Periodogram方法（波动大）', 'Welch方法（平滑）', 'Location', 'best');
-axis([-0.1 0.1 -60 10]);
-hold off;
-
-% 子图4：方差对比（计算局部方差）
-% 选择一段频率范围计算方差
-freq_variance_idx = (f_norm_z >= -0.2) & (f_norm_z <= 0.2);
-Tx_var_periodogram = var(Tx_mag_db_periodogram_interp(freq_variance_idx));
-Tx_var_welch = var(Tx_mag_db_z(freq_variance_idx));
-Rx_var_periodogram = var(Rx_mag_db_periodogram_interp(freq_variance_idx));
-Rx_var_welch = var(Rx_mag_db_z_before_eq(freq_variance_idx));
-
-bar_data = [Tx_var_periodogram, Tx_var_welch; Rx_var_periodogram, Rx_var_welch];
-subplot(2, 2, 4);
-bar(bar_data, 'grouped');
-set(gca, 'XTickLabel', {'发送信号', '接收信号'});
-ylabel('功率谱方差 (dB²)', 'FontSize', 12);
-title('功率谱估计方差对比', 'FontSize', 14);
-legend('Periodogram方法', 'Welch方法', 'Location', 'best');
-grid on;
-
-% 在柱状图上添加数值标签
-for i = 1:2
-    for j = 1:2
-        text(i + (j-1.5)*0.2, bar_data(i,j) + max(bar_data(:))*0.05, ...
-            sprintf('%.2f', bar_data(i,j)), ...
-            'HorizontalAlignment', 'center', 'FontSize', 10);
-    end
-end
-
-fprintf('\n==== 功率谱估计方差对比（数值）====\n');
-fprintf('发送信号：\n');
-fprintf('  Periodogram方法方差：%.4f dB²\n', Tx_var_periodogram);
-fprintf('  Welch方法方差：%.4f dB²\n', Tx_var_welch);
-fprintf('  方差降低倍数：%.2fx\n', Tx_var_periodogram/Tx_var_welch);
-fprintf('接收信号：\n');
-fprintf('  Periodogram方法方差：%.4f dB²\n', Rx_var_periodogram);
-fprintf('  Welch方法方差：%.4f dB²\n', Rx_var_welch);
-fprintf('  方差降低倍数：%.2fx\n', Rx_var_periodogram/Rx_var_welch);
-fprintf('==========================================\n\n');
 
 % Figure 13将在均衡处理后完整绘制（包含均衡后的频谱）
 
@@ -926,68 +744,48 @@ if use_pilot_equalization && pilot_count > 0 && ~isempty(H_est_full)
     % 提取均衡后信号的局部窗口
     rx_seg_eq = Rx_data_eq(zs_eq:ze_eq);
     
-    %------------------------------------------------------------------------------
-    % Welch算法：对接收信号（均衡后）进行功率谱估计
-    %------------------------------------------------------------------------------
-    N_seg_eq = length(rx_seg_eq);
-    L_eq = floor((N_seg_eq - K_overlap) / (M_seg - K_overlap));  % 均衡后信号的分段数
-    
-    Rx_periodograms_after_eq = zeros(L_eq, Nfft_zoom);
-    
-    for l = 1:L_eq
-        start_idx = 1 + (l-1) * (M_seg - K_overlap);
-        end_idx = start_idx + M_seg - 1;
-        
-        if end_idx <= N_seg_eq
-            segment = rx_seg_eq(start_idx:end_idx);
-            windowed_segment = segment .* hamming_win(:)';
-            X_seg = fft(windowed_segment, Nfft_zoom);
-            Rx_periodograms_after_eq(l, :) = abs(X_seg).^2 / (M_seg * U);
-        end
-    end
-    
-    Rx_PSD_welch_after_eq = mean(Rx_periodograms_after_eq, 1);
-    Rx_PSD_welch_after_eq = fftshift(Rx_PSD_welch_after_eq);
-    Rx_mag_db_z_after_eq = 10*log10(Rx_PSD_welch_after_eq + eps);
+    % 计算均衡后信号的频谱
+    Rx_Fz_after_eq = fftshift(fft(rx_seg_eq, Nfft_zoom));
+    Rx_mag_db_z_after_eq = 20*log10(abs(Rx_Fz_after_eq) / max(abs(Rx_Fz_after_eq)) + eps);
     
     % Figure 13: 频谱对比（发送、接收均衡前、接收均衡后）
     figure(13);
     subplot(3, 1, 1);
     plot(f_norm_z, Tx_mag_db_z, 'b', 'LineWidth', 1.5);
     grid on;
-    ylabel('Power Spectral Density (dB)');
+    ylabel('Magnitude (dB)');
     xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
-    title(sprintf('发送信号功率谱（Welch算法，双边谱，局部放大 [%d:%d]）', zs, ze));
+    title(sprintf('发送信号频谱（双边谱，局部放大 [%d:%d]）', zs, ze));
     
     subplot(3, 1, 2);
     plot(f_norm_z, Rx_mag_db_z_before_eq, 'r', 'LineWidth', 1.5);
     grid on;
-    ylabel('Power Spectral Density (dB)');
+    ylabel('Magnitude (dB)');
     xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
-    title(sprintf('接收信号功率谱（Welch算法，均衡前，局部放大 [%d:%d]）', zs, ze));
+    title(sprintf('接收信号频谱（均衡前，局部放大 [%d:%d]）', zs, ze));
     
     subplot(3, 1, 3);
     plot(f_norm_z, Rx_mag_db_z_after_eq, 'g', 'LineWidth', 1.5);
     grid on;
-    ylabel('Power Spectral Density (dB)');
+    ylabel('Magnitude (dB)');
     xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
-    title(sprintf('接收信号功率谱（Welch算法，导频均衡后，局部放大 [%d:%d]）', zs, ze));
+    title(sprintf('接收信号频谱（导频均衡后，局部放大 [%d:%d]）', zs, ze));
 else
     % 不使用均衡，只显示发送和接收频谱
     figure(13);
     subplot(2, 1, 1);
     plot(f_norm_z, Tx_mag_db_z, 'b', 'LineWidth', 1.5);
     grid on;
-    ylabel('Power Spectral Density (dB)');
+    ylabel('Magnitude (dB)');
     xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
-    title(sprintf('发送信号功率谱（Welch算法，双边谱，局部放大 [%d:%d]）', zs, ze));
+    title(sprintf('发送信号频谱（双边谱，局部放大 [%d:%d]）', zs, ze));
     
     subplot(2, 1, 2);
     plot(f_norm_z, Rx_mag_db_z_before_eq, 'r', 'LineWidth', 1.5);
     grid on;
-    ylabel('Power Spectral Density (dB)');
+    ylabel('Magnitude (dB)');
     xlabel('Normalized Frequency (-0.5..0.5 = \pm fs/2)');
-    title(sprintf('接收信号功率谱（Welch算法，未均衡，局部放大 [%d:%d]）', zs, ze));
+    title(sprintf('接收信号频谱（未均衡，局部放大 [%d:%d]）', zs, ze));
 end
 
 % Figure 14: 信道估计结果可视化（如果使用导频均衡）
