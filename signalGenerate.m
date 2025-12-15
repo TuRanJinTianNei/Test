@@ -518,6 +518,25 @@ if use_channel
     fprintf('接收信号已保存在变量 Rx_data 中\n');
     
     %------------------------------------------------------------------------------
+    % 保存信号到mat文件
+    %------------------------------------------------------------------------------
+    fprintf('\n正在保存信号到mat文件...\n');
+    
+    % 生成文件名（包含参数信息）
+    mat_filename = sprintf('OFDM_signal_SNR%.1fdB_%dsubcarriers_%s.mat', ...
+        targetSNRdB, carrier_count, datestr(now, 'yyyymmdd_HHMMSS'));
+    
+    % 保存信号和相关参数
+    save(mat_filename, 'Rx_data', 'Tx_data', 'fs', 'targetSNRdB', ...
+        'carrier_count', 'subcarrier_spacing', 'IFFT_bin_length', ...
+        'GI', 'GIP', 'total_symbols', 'symbols_per_frame', ...
+        'use_rayleigh_fading', 'fd', 'N0', '-v7.3');
+    
+    fprintf('信号已保存到文件: %s\n', mat_filename);
+    fprintf('  包含变量: Rx_data, Tx_data, fs, targetSNRdB, carrier_count, ...\n');
+    fprintf('  文件格式: MATLAB v7.3 (支持大文件)\n\n');
+    
+    %------------------------------------------------------------------------------
     % 绘制接收信号的时域和频域图
     %------------------------------------------------------------------------------
     if plot_signal
@@ -599,6 +618,24 @@ if use_channel
 else
     fprintf('\n注意：未启用信道传输，仅生成发送信号\n');
     fprintf('如需通过信道传输，请设置 use_channel = true\n\n');
+    
+    %------------------------------------------------------------------------------
+    % 保存发送信号到mat文件（未启用信道传输时）
+    %------------------------------------------------------------------------------
+    fprintf('正在保存发送信号到mat文件...\n');
+    
+    % 生成文件名（包含参数信息）
+    mat_filename = sprintf('OFDM_Tx_signal_%dsubcarriers_%s.mat', ...
+        carrier_count, datestr(now, 'yyyymmdd_HHMMSS'));
+    
+    % 保存发送信号和相关参数
+    save(mat_filename, 'Tx_data', 'fs', 'carrier_count', 'subcarrier_spacing', ...
+        'IFFT_bin_length', 'GI', 'GIP', 'total_symbols', 'symbols_per_frame', ...
+        '-v7.3');
+    
+    fprintf('发送信号已保存到文件: %s\n', mat_filename);
+    fprintf('  包含变量: Tx_data, fs, carrier_count, ...\n');
+    fprintf('  文件格式: MATLAB v7.3 (支持大文件)\n\n');
 end
 
 %===============================================================================

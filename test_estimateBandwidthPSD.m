@@ -4,8 +4,7 @@
 % 功能说明:
 %   1. 运行signalGenerate.m生成OFDM信号（发送和接收信号）
 %   2. 使用estimateBandwidthPSD.m对接收信号进行功率谱密度估计
-%   3. 基于PSD估计结果计算带宽（使用阈值法）
-%   4. 显示估计结果和性能对比
+%   3. 显示PSD估计结果
 %
 % 依赖关系:
 %   - signalGenerate.m：生成OFDM信号
@@ -83,154 +82,91 @@ fprintf('----------------------------------------\n');
 fprintf('功率谱密度估计完成！\n');
 fprintf('  - Welch算法：频率点数 = %d\n', length(f_welch));
 fprintf('  - AR模型法：频率点数 = %d\n', length(f_ar));
+fprintf('  注意：对于实信号，只估计正频率部分（0到fs/2），频谱共轭对称\n');
+fprintf('  单边谱转换规则：正频率部分（除DC和Nyquist）幅度×2\n');
 fprintf('  完成！\n\n');
 
 %===============================================================================
-% 步骤3: 基于PSD估计结果计算带宽（使用阈值法）
+% 步骤3: 显示PSD估计结果
 %===============================================================================
-fprintf('步骤3: 基于PSD估计结果计算带宽...\n');
+fprintf('步骤3: PSD估计结果分析...\n');
 fprintf('----------------------------------------\n');
-
-% Welch算法带宽计算：使用固定-3dB阈值
-threshold_welch = -3;
-fprintf('Welch算法：使用固定阈值 %.1f dB\n', threshold_welch);
 
 % 找到峰值位置
 [~, peak_idx_welch] = max(Pxx_welch);
 peak_freq_welch = f_welch(peak_idx_welch);
+peak_value_welch = Pxx_welch(peak_idx_welch);
 
-% 在峰值左侧（低频侧）找阈值点
-left_side_welch = Pxx_welch(1:peak_idx_welch);
-left_indices_welch = find(left_side_welch <= threshold_welch);
-if ~isempty(left_indices_welch)
-    left_idx_welch = left_indices_welch(end);
-    band_lower_welch = f_welch(left_idx_welch);
-else
-    band_lower_welch = f_welch(1);
-    fprintf('  警告：左侧未找到阈值点，使用最低频率\n');
-end
-
-% 在峰值右侧（高频侧）找阈值点
-right_side_welch = Pxx_welch(peak_idx_welch:end);
-right_indices_welch = find(right_side_welch <= threshold_welch);
-if ~isempty(right_indices_welch)
-    right_idx_welch = peak_idx_welch + right_indices_welch(1) - 1;
-    band_upper_welch = f_welch(right_idx_welch);
-else
-    band_upper_welch = f_welch(end);
-    fprintf('  警告：右侧未找到阈值点，使用最高频率\n');
-end
-
-B_welch = abs(band_upper_welch - band_lower_welch);
-
-% AR模型带宽计算：根据SNR自适应选择阈值
-if targetSNRdB > 4
-    threshold_ar = -6;
-    fprintf('AR模型法：使用自适应阈值 %.1f dB (SNR > 4 dB)\n', threshold_ar);
-elseif targetSNRdB > 0 && targetSNRdB <= 4
-    threshold_ar = -5;
-    fprintf('AR模型法：使用自适应阈值 %.1f dB (0 < SNR <= 4 dB)\n', threshold_ar);
-else
-    threshold_ar = -3;
-    fprintf('AR模型法：使用自适应阈值 %.1f dB (SNR <= 0 dB)\n', threshold_ar);
-end
-
-% 找到峰值位置
 [~, peak_idx_ar] = max(Pxx_ar);
 peak_freq_ar = f_ar(peak_idx_ar);
+peak_value_ar = Pxx_ar(peak_idx_ar);
 
-% 在峰值左侧（低频侧）找阈值点
-left_side_ar = Pxx_ar(1:peak_idx_ar);
-left_indices_ar = find(left_side_ar <= threshold_ar);
-if ~isempty(left_indices_ar)
-    left_idx_ar = left_indices_ar(end);
-    band_lower_ar = f_ar(left_idx_ar);
-else
-    band_lower_ar = f_ar(1);
-    fprintf('  警告：左侧未找到阈值点，使用最低频率\n');
-end
+fprintf('Welch算法PSD特征：\n');
+fprintf('  - 峰值频率: %.3f MHz\n', peak_freq_welch/1e6);
+fprintf('  - 峰值功率: %.2f dB\n', peak_value_welch);
+fprintf('  - 频率范围: %.3f - %.3f MHz (正频率部分，0到fs/2)\n', f_welch(1)/1e6, f_welch(end)/1e6);
+fprintf('  - 奈奎斯特频率: %.3f MHz\n', fs/2/1e6);
 
-% 在峰值右侧（高频侧）找阈值点
-right_side_ar = Pxx_ar(peak_idx_ar:end);
-right_indices_ar = find(right_side_ar <= threshold_ar);
-if ~isempty(right_indices_ar)
-    right_idx_ar = peak_idx_ar + right_indices_ar(1) - 1;
-    band_upper_ar = f_ar(right_idx_ar);
-else
-    band_upper_ar = f_ar(end);
-    fprintf('  警告：右侧未找到阈值点，使用最高频率\n');
-end
-
-B_ar = abs(band_upper_ar - band_lower_ar);
+fprintf('\nAR模型法PSD特征：\n');
+fprintf('  - 峰值频率: %.3f MHz\n', peak_freq_ar/1e6);
+fprintf('  - 峰值功率: %.2f dB\n', peak_value_ar);
+fprintf('  - 频率范围: %.3f - %.3f MHz (正频率部分，0到fs/2)\n', f_ar(1)/1e6, f_ar(end)/1e6);
+fprintf('  - 奈奎斯特频率: %.3f MHz\n', fs/2/1e6);
 
 fprintf('  完成！\n\n');
 
 %===============================================================================
-% 步骤4: 显示结果和性能分析
+% 步骤4: 显示PSD估计结果总结
 %===============================================================================
 fprintf('========================================\n');
-fprintf('带宽估计结果\n');
+fprintf('PSD估计结果总结\n');
 fprintf('========================================\n');
 fprintf('理论带宽: %.3f MHz (%.0f kHz)\n', B_ideal/1e6, B_ideal/1e3);
 fprintf('\n');
-fprintf('Welch算法估计结果：\n');
-fprintf('  - 估计带宽: %.3f MHz (%.0f kHz)\n', B_welch/1e6, B_welch/1e3);
-fprintf('  - 下边界频率: %.3f MHz\n', band_lower_welch/1e6);
-fprintf('  - 上边界频率: %.3f MHz\n', band_upper_welch/1e6);
+fprintf('Welch算法PSD估计：\n');
 fprintf('  - 峰值频率: %.3f MHz\n', peak_freq_welch/1e6);
-fprintf('  - 绝对误差: %.3f MHz (%.0f kHz)\n', abs(B_welch - B_ideal)/1e6, abs(B_welch - B_ideal)/1e3);
-fprintf('  - 相对误差: %.2f%%\n', abs(B_welch - B_ideal) / B_ideal * 100);
-fprintf('  - 检测率: %.2f%%\n', (1 - abs(B_welch - B_ideal) / B_ideal) * 100);
+fprintf('  - 峰值功率: %.2f dB\n', peak_value_welch);
+fprintf('  - 频率分辨率: %.3f kHz\n', (f_welch(2) - f_welch(1))/1e3);
 fprintf('\n');
-fprintf('AR模型法估计结果：\n');
-fprintf('  - 估计带宽: %.3f MHz (%.0f kHz)\n', B_ar/1e6, B_ar/1e3);
-fprintf('  - 下边界频率: %.3f MHz\n', band_lower_ar/1e6);
-fprintf('  - 上边界频率: %.3f MHz\n', band_upper_ar/1e6);
+fprintf('AR模型法PSD估计：\n');
 fprintf('  - 峰值频率: %.3f MHz\n', peak_freq_ar/1e6);
-fprintf('  - 绝对误差: %.3f MHz (%.0f kHz)\n', abs(B_ar - B_ideal)/1e6, abs(B_ar - B_ideal)/1e3);
-fprintf('  - 相对误差: %.2f%%\n', abs(B_ar - B_ideal) / B_ideal * 100);
-fprintf('  - 检测率: %.2f%%\n', (1 - abs(B_ar - B_ideal) / B_ideal) * 100);
+fprintf('  - 峰值功率: %.2f dB\n', peak_value_ar);
+fprintf('  - 频率分辨率: %.3f kHz\n', (f_ar(2) - f_ar(1))/1e3);
 fprintf('========================================\n\n');
 
 %===============================================================================
-% 步骤5: 绘制带宽估计结果对比图
+% 步骤5: 绘制PSD估计结果对比图
 %===============================================================================
-fprintf('正在绘制带宽估计结果对比图...\n');
+fprintf('正在绘制PSD估计结果对比图...\n');
 
-figure('Name', '带宽估计结果对比', 'Position', [100, 100, 1400, 800]);
+figure('Name', 'PSD估计结果对比', 'Position', [100, 100, 1400, 600]);
 
-% 子图1: Welch算法PSD和带宽标记
-subplot(2, 2, 1);
+% 子图1: Welch算法PSD
+subplot(1, 3, 1);
 plot(f_welch/1e6, Pxx_welch, 'b-', 'LineWidth', 1.5);
 hold on;
-plot([band_lower_welch/1e6, band_lower_welch/1e6], ylim, 'r--', 'LineWidth', 2, 'DisplayName', '下边界');
-plot([band_upper_welch/1e6, band_upper_welch/1e6], ylim, 'r--', 'LineWidth', 2, 'DisplayName', '上边界');
 plot([peak_freq_welch/1e6, peak_freq_welch/1e6], ylim, 'g--', 'LineWidth', 1.5, 'DisplayName', '峰值');
-plot([band_lower_welch/1e6, band_upper_welch/1e6], [threshold_welch, threshold_welch], 'k:', 'LineWidth', 1, 'DisplayName', sprintf('阈值 (%.1f dB)', threshold_welch));
 grid on;
 xlabel('频率 (MHz)');
 ylabel('PSD (dB)');
-title(sprintf('Welch算法带宽估计\n估计带宽: %.3f MHz (理论: %.3f MHz)', B_welch/1e6, B_ideal/1e6));
+title(sprintf('Welch算法PSD估计\n峰值频率: %.3f MHz', peak_freq_welch/1e6));
 legend('Location', 'best');
 hold off;
 
-% 子图2: AR模型PSD和带宽标记
-subplot(2, 2, 2);
+% 子图2: AR模型PSD
+subplot(1, 3, 2);
 plot(f_ar/1e6, Pxx_ar, 'r-', 'LineWidth', 1.5);
 hold on;
-plot([band_lower_ar/1e6, band_lower_ar/1e6], ylim, 'r--', 'LineWidth', 2, 'DisplayName', '下边界');
-plot([band_upper_ar/1e6, band_upper_ar/1e6], ylim, 'r--', 'LineWidth', 2, 'DisplayName', '上边界');
 plot([peak_freq_ar/1e6, peak_freq_ar/1e6], ylim, 'g--', 'LineWidth', 1.5, 'DisplayName', '峰值');
-plot([band_lower_ar/1e6, band_upper_ar/1e6], [threshold_ar, threshold_ar], 'k:', 'LineWidth', 1, 'DisplayName', sprintf('阈值 (%.1f dB)', threshold_ar));
 grid on;
 xlabel('频率 (MHz)');
 ylabel('PSD (dB)');
-title(sprintf('AR模型法带宽估计\n估计带宽: %.3f MHz (理论: %.3f MHz)', B_ar/1e6, B_ideal/1e6));
+title(sprintf('AR模型法PSD估计\n峰值频率: %.3f MHz', peak_freq_ar/1e6));
 legend('Location', 'best');
 hold off;
 
 % 子图3: 两种方法PSD对比
-subplot(2, 2, 3);
+subplot(1, 3, 3);
 plot(f_welch/1e6, Pxx_welch, 'b-', 'LineWidth', 1.5, 'DisplayName', 'Welch算法');
 hold on;
 % 需要插值AR模型的PSD到Welch的频率点进行对比，或者分别绘制
@@ -247,25 +183,6 @@ title('功率谱密度估计对比');
 legend('Location', 'best');
 hold off;
 
-% 子图4: 带宽估计结果柱状图
-subplot(2, 2, 4);
-methods = {'Welch算法', 'AR模型法', '理论值'};
-bandwidths = [B_welch/1e6, B_ar/1e6, B_ideal/1e6];
-colors = [0.2 0.6 0.8; 0.8 0.2 0.2; 0.2 0.8 0.2];
-b = bar(bandwidths, 'FaceColor', 'flat');
-b.CData = colors;
-set(gca, 'XTickLabel', methods);
-ylabel('带宽 (MHz)');
-title('带宽估计结果对比');
-grid on;
-hold on;
-% 添加数值标签
-for i = 1:length(bandwidths)
-    text(i, bandwidths(i) + 0.05, sprintf('%.3f MHz', bandwidths(i)), ...
-        'HorizontalAlignment', 'center', 'FontSize', 10);
-end
-hold off;
-
 fprintf('图形绘制完成！\n\n');
 
 fprintf('========================================\n');
@@ -273,10 +190,10 @@ fprintf('测试完成！\n');
 fprintf('========================================\n');
 fprintf('所有结果已显示在上方的图形窗口中\n');
 fprintf('变量说明：\n');
-fprintf('  - B_welch: Welch算法估计的带宽 (Hz)\n');
-fprintf('  - B_ar: AR模型法估计的带宽 (Hz)\n');
 fprintf('  - B_ideal: 理论带宽 (Hz)\n');
 fprintf('  - Pxx_welch, f_welch: Welch算法PSD估计结果\n');
 fprintf('  - Pxx_ar, f_ar: AR模型法PSD估计结果\n');
+fprintf('  - peak_freq_welch: Welch算法峰值频率 (Hz)\n');
+fprintf('  - peak_freq_ar: AR模型法峰值频率 (Hz)\n');
 fprintf('========================================\n');
 

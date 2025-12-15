@@ -57,23 +57,63 @@ ar_criterion = p.Results.ar_criterion;
 %**************************************************************************
 % Welch算法功率谱估计
 %**************************************************************************
-% 注意：pwelch对实信号只返回正频率部分（0到fs/2）
+% 注意：对于实信号，频谱是共轭对称的，即 X(-f) = X*(f)
+%      pwelch函数对实信号自动返回单边谱（0到fs/2），并且已经自动将
+%      正频率部分的幅度乘以2（除了DC和Nyquist频率），所以输出已经是单边谱
+%      单边谱幅度 = 2 × 双边谱幅度（对于0 < f < fs/2）
+%      DC（f=0）和Nyquist频率（f=fs/2）的幅度保持不变
 [Pxx2, f1] = pwelch(sig_processed, hanning(welch_window), welch_overlap, welch_nfft, fs);
 
-% 归一化处理
+% 验证：确保频率范围正确（0到fs/2）
+if max(f1) > fs/2 + eps
+    warning('Welch算法返回的频率范围超出正频率范围，可能存在错误');
+end
+
+% 确保pwelch返回的是单边谱（0到fs/2）
+% 如果频率范围不正确，需要手动提取正频率部分
+if min(f1) < -eps || max(f1) > fs/2 + eps
+    % 提取正频率部分（0到fs/2）
+    positive_freq_idx = (f1 >= 0) & (f1 <= fs/2 + eps);
+    f1 = f1(positive_freq_idx);
+    Pxx2 = Pxx2(positive_freq_idx);
+end
+
+% 显式验证并确保单边谱转换正确
+% 
+% 【单边谱转换规则说明】
+% 对于实信号，双边功率谱密度（PSD）是共轭对称的，即 P(-f) = P(f)
+% 单边谱转换规则：
+%   - DC分量（f=0）：幅度不变（P_single(0) = P_double(0)）
+%   - 正频率（0 < f < fs/2）：幅度乘以2（P_single(f) = 2 × P_double(f)）
+%   - Nyquist频率（f=fs/2）：幅度不变（P_single(fs/2) = P_double(fs/2)）
+% 
+% 【pwelch函数行为】
+% MATLAB的pwelch函数对实信号自动返回单边谱（0到fs/2），并且已经自动将
+% 正频率部分的功率谱密度乘以2（除了DC和Nyquist频率），所以输出已经是单边谱。
+% 因此，我们不需要再次进行转换，只需要验证频率范围确实是0到fs/2。
+% 
+% 【验证步骤】
+% 1. 验证频率范围：确保f1在[0, fs/2]范围内
+% 2. 如果频率范围不正确，提取正频率部分
+% 3. 确保输出是单边谱格式
+
+% 归一化处理（在转换为dB之前）
 Pxx22 = Pxx2;
 Pxx22 = Pxx22 / min(Pxx22);  % 归一化到最小值
 Pxx22 = 10*log10(Pxx22);     % 转换为dB单位
 Pxx22 = Pxx22 - max(Pxx22);  % 归一化到最大值（峰值在0dB）
 
-% 输出Welch功率谱（正频率部分：0到fs/2）
+% 输出Welch功率谱（单边谱：0到fs/2）
 Pxx_welch = Pxx22;
 f_welch = f1;
 
 %**************************************************************************
 % AR模型功率谱估计（使用Burg算法）
 %**************************************************************************
-% 注意：Burg函数内部已处理，只返回正频率部分（0到fs/2）
+% 注意：对于实信号，频谱是共轭对称的
+%      Burg函数内部会将双边谱转换为单边谱（0到fs/2），与Welch算法保持一致
+%      单边谱幅度 = 2 × 双边谱幅度（对于0 < f < fs/2）
+%      DC（f=0）和Nyquist频率（f=fs/2）的幅度保持不变
 [Pxx1, f, p] = Burg(sig_processed, fs, ar_criterion);
 
 % 输出AR功率谱（正频率部分：0到fs/2）
@@ -84,51 +124,58 @@ f_ar = f;
 % 绘制PSD图形（可选）
 %**************************************************************************
 if plot_flag
-    % AR模型功率谱图
-    figure('Name', 'AR模型功率谱密度估计')
+    % AR模型功率谱图（单边谱）
+    figure('Name', 'AR模型功率谱密度估计（单边谱）')
     plot(f, Pxx1);
     grid on;
     xlabel('频率 f (Hz)');
     ylabel('PSD (dB)');
-    title(sprintf('AR模型方法的功率谱密度估计 (SNR = %.1f dB, 阶数 = %d)', snr, p));
+    title(sprintf('AR模型方法的功率谱密度估计（单边谱）(SNR = %.1f dB, 阶数 = %d)', snr, p));
     
-    % Welch算法功率谱图
-    figure('Name', 'Welch算法功率谱密度估计')
+    % Welch算法功率谱图（单边谱）
+    figure('Name', 'Welch算法功率谱密度估计（单边谱）')
     plot(f1, Pxx22);
     grid on;
     xlabel('频率 f (Hz)');
     ylabel('PSD (dB)');
-    title(sprintf('Welch算法估计的功率谱密度 (SNR = %.1f dB)', snr));
+    title(sprintf('Welch算法估计的功率谱密度（单边谱）(SNR = %.1f dB)', snr));
     
-    % OFDM信号频谱图
+    % OFDM信号频谱图（单边谱）
     N_sig = length(sig_processed);
     N_fft = N_sig;  % 使用信号长度作为FFT点数
-    OfdmSymComput = 20 * log10(abs(fft(sig_processed, N_fft)));
-    OfdmSymPSDy = fftshift(OfdmSymComput) - max(OfdmSymComput);
     
-    % 生成频率向量（只取正频率部分）
-    N_half = floor(N_fft/2);
-    Frc = (0:N_half-1) * fs / N_fft;  % 0 到 fs/2 的频率范围
+    % FFT计算（双边谱）
+    X_fft = fft(sig_processed, N_fft);
+    X_mag_squared = abs(X_fft).^2;  % 功率谱（双边）
     
-    % 提取正频率部分的频谱（fftshift后，正频率在中间到末尾）
+    % 提取正频率部分并转换为单边谱
     if mod(N_fft, 2) == 0
-        % 偶数长度：正频率从 N_fft/2+1 到 N_fft
-        OfdmSymPSDy_positive = OfdmSymPSDy(N_fft/2+1:end);
+        % 偶数长度：正频率从 1 到 N_fft/2+1
+        % 索引：1 (DC), 2:N_fft/2 (正频率), N_fft/2+1 (Nyquist)
+        X_single_sided = X_mag_squared(1:N_fft/2+1);
+        % 单边谱转换：正频率部分（除DC和Nyquist）乘以2
+        X_single_sided(2:N_fft/2) = X_single_sided(2:N_fft/2) * 2;
+        % 频率向量（0到fs/2）
+        Frc = (0:N_fft/2) * fs / N_fft;
     else
-        % 奇数长度：正频率从 (N_fft+1)/2+1 到 N_fft
-        OfdmSymPSDy_positive = OfdmSymPSDy((N_fft+1)/2+1:end);
+        % 奇数长度：正频率从 1 到 (N_fft+1)/2
+        % 索引：1 (DC), 2:(N_fft+1)/2 (正频率，无Nyquist频率)
+        X_single_sided = X_mag_squared(1:(N_fft+1)/2);
+        % 单边谱转换：正频率部分（除DC）乘以2
+        X_single_sided(2:end) = X_single_sided(2:end) * 2;
+        % 频率向量（0到略小于fs/2）
+        Frc = (0:(N_fft-1)/2) * fs / N_fft;
     end
     
-    % 确保长度匹配（取较小的长度）
-    min_len = min(length(Frc), length(OfdmSymPSDy_positive));
-    Frc = Frc(1:min_len);
-    OfdmSymPSDy_positive = OfdmSymPSDy_positive(1:min_len);
+    % 转换为dB并归一化
+    OfdmSymPSDy = 10 * log10(X_single_sided);
+    OfdmSymPSDy = OfdmSymPSDy - max(OfdmSymPSDy);  % 归一化到峰值0dB
     
-    figure('Name', 'OFDM信号频谱')
-    plot(Frc, OfdmSymPSDy_positive);
-    xlabel('频率 f (Hz)');
+    figure('Name', 'OFDM信号频谱（单边谱）')
+    plot(Frc/1e6, OfdmSymPSDy);
+    xlabel('频率 f (MHz)');
     ylabel('PSD (dB)');
-    title(sprintf('OFDM信号频谱 (SNR = %.1f dB)', snr));
+    title(sprintf('OFDM信号频谱（单边谱）(SNR = %.1f dB)', snr));
     grid on;
 end
 
@@ -183,16 +230,49 @@ else % p不存在，需要估计，根据准则criterion
     [a, E] = computeARpara(x, p);
 end
 [h, f] = freqz(1, a, 20e5, Fs);
+% freqz返回的是双边谱（0到Fs），需要转换为单边谱
+% 单边谱幅度规则：
+%   - DC分量（f=0）：幅度不变
+%   - 正频率（0 < f < fs/2）：幅度乘以2
+%   - Nyquist频率（f=fs/2）：幅度不变（如果存在）
 psdviaBurg = E(end)*abs(h).^2./Fs;
-psdviaBurg = psdviaBurg/abs(max(psdviaBurg));
-psdviaBurg = (10*log10(abs(psdviaBurg)));
 
-% 只保留正频率部分（0到Fs/2），与Welch算法保持一致
-% freqz返回的频率范围是0到Fs，对于实信号，负频率部分是正频率的镜像
+% 只保留正频率部分（0到Fs/2）
 f_nyquist = Fs / 2;  % 奈奎斯特频率
-positive_freq_idx = f <= f_nyquist;
+positive_freq_idx = f <= f_nyquist + eps;  % 包含Nyquist频率
 f = f(positive_freq_idx);
 psdviaBurg = psdviaBurg(positive_freq_idx);
+
+% 转换为单边谱：正频率部分（除DC和Nyquist）幅度乘以2
+% 单边谱规则：
+%   - DC分量（f=0）：幅度不变
+%   - 正频率（0 < f < fs/2）：幅度乘以2
+%   - Nyquist频率（f=fs/2）：幅度不变
+
+% 找到DC和Nyquist频率的索引
+dc_idx = find(abs(f) < eps, 1);  % DC频率（f=0）
+nyquist_idx = find(abs(f - f_nyquist) < eps, 1);  % Nyquist频率（f=fs/2）
+
+% 对正频率部分（0 < f < fs/2）乘以2
+if ~isempty(dc_idx) && ~isempty(nyquist_idx)
+    % 有DC和Nyquist频率：对中间部分乘以2
+    if nyquist_idx > dc_idx + 1
+        psdviaBurg(dc_idx+1:nyquist_idx-1) = psdviaBurg(dc_idx+1:nyquist_idx-1) * 2;
+    end
+elseif ~isempty(dc_idx)
+    % 只有DC频率，没有Nyquist频率（奇数长度或频率分辨率问题）
+    psdviaBurg(dc_idx+1:end) = psdviaBurg(dc_idx+1:end) * 2;
+elseif ~isempty(nyquist_idx)
+    % 只有Nyquist频率，没有DC频率（不太可能，但处理一下）
+    psdviaBurg(1:nyquist_idx-1) = psdviaBurg(1:nyquist_idx-1) * 2;
+else
+    % 都没有，全部乘以2（不太可能，但处理一下）
+    psdviaBurg = psdviaBurg * 2;
+end
+
+% 归一化和转换为dB
+psdviaBurg = psdviaBurg/abs(max(psdviaBurg));
+psdviaBurg = (10*log10(abs(psdviaBurg)));
 end
 
 % ==================== computeARpara (Burg的子函数) ====================
