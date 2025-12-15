@@ -3,7 +3,13 @@
   // 如果下面的配置不生效，可以通过右键菜单设置：
   // 右键 .md 文件 -> "打开方式..." -> 选择 "markdown editor" -> 点击 "配置默认编辑器..."
   "workbench.editorAssociations": {
-    "*.md": "vscode.markdown.preview.editor"
+    "*.md": "cweijan.markdownViewer",
+    "*.npy": "default",
+    "*.xls": "default",
+    "*.csv": "default",
+    "*.tsv": "gc-excelviewer-csv-editor",
+    "*.fxml": "default",
+    "*.mat": "default"
   },
   
   // 如果上面的不生效，可以尝试以下选项（根据你安装的扩展而定）：

@@ -558,55 +558,6 @@ fprintf('MSE (Tx vs Rx)     : %.6g\n', mse_zoom);
 fprintf('===========================================\n');
 
 %------------------------------------------------------------------------------
-% 步骤11.5: 使用method.m对接收信号进行带宽估计（两种算法）
-%------------------------------------------------------------------------------
-fprintf('\n==== 接收信号带宽估计（method.m）====\n');
-
-% 计算理论带宽
-B_ideal = carrier_count * subcarrier_spacing;  % 300 * 15e3 = 4.5 MHz
-fprintf('理论带宽 B_ideal: %.6f Hz (%.3f MHz)\n', B_ideal, B_ideal/1e6);
-
-% 使用method.m对接收信号进行带宽估计
-% 注意：使用目标SNR（targetSNRdB）进行AR模型法的阈值选择
-try
-    [B_welch, B_ar] = method(Rx_data, fs, targetSNRdB);
-    
-    % 计算Welch算法估计带宽的误差
-    error_welch = abs(B_welch - B_ideal);
-    error_welch_percent = (error_welch / B_ideal) * 100;
-    
-    % 计算AR模型法估计带宽的误差
-    error_ar = abs(B_ar - B_ideal);
-    error_ar_percent = (error_ar / B_ideal) * 100;
-    
-    % 输出结果
-    fprintf('\n【Welch算法估计结果】\n');
-    fprintf('估计带宽 B_welch: %.6f Hz (%.3f MHz)\n', B_welch, B_welch/1e6);
-    fprintf('绝对误差        : %.6f Hz (%.3f MHz)\n', error_welch, error_welch/1e6);
-    fprintf('相对误差        : %.2f%%\n', error_welch_percent);
-    
-    fprintf('\n【AR模型法估计结果】\n');
-    fprintf('估计带宽 B_ar   : %.6f Hz (%.3f MHz)\n', B_ar, B_ar/1e6);
-    fprintf('绝对误差        : %.6f Hz (%.3f MHz)\n', error_ar, error_ar/1e6);
-    fprintf('相对误差        : %.2f%%\n', error_ar_percent);
-    
-    fprintf('\n【方法对比】\n');
-    if error_welch < error_ar
-        fprintf('Welch算法估计更准确（误差更小）\n');
-    elseif error_ar < error_welch
-        fprintf('AR模型法估计更准确（误差更小）\n');
-    else
-        fprintf('两种方法估计精度相同\n');
-    end
-    
-catch ME
-    fprintf('警告：带宽估计失败，错误信息：%s\n', ME.message);
-    fprintf('可能原因：method.m函数调用失败或缺少必要的工具箱\n');
-end
-
-fprintf('==========================================\n\n');
-
-%------------------------------------------------------------------------------
 % 步骤12: Figure 13 - 与 Figure 12 同一窗口的频谱对比（双边谱）
 % 注意：均衡前的频谱在这里先计算，均衡后的频谱在均衡处理后计算
 %------------------------------------------------------------------------------
