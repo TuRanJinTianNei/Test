@@ -19,6 +19,9 @@ function [Pxx_welch, f_welch, Pxx_ar, f_ar] = estimateBandwidthPSD(sig_processed
 %                    'welch_overlap' - Welch算法重叠样本数，默认55
 %                    'welch_nfft' - Welch算法FFT点数，默认8192
 %                    'ar_criterion' - AR模型阶数选择准则，默认'AIC'
+%                    'ar_max_order_ratio' - AR模型最大阶数比例，默认0.5
+%                                           (阶数上限 = ceil(N * ar_max_order_ratio))
+%                                           增加此值可获得更平滑的PSD，但可能过拟合
 %
 % 输出参数:
 %   Pxx_welch      - Welch算法功率谱密度估计值（dB，归一化）
@@ -34,9 +37,14 @@ function [Pxx_welch, f_welch, Pxx_ar, f_ar] = estimateBandwidthPSD(sig_processed
 %   [Pxx_w, f_w, Pxx_a, f_a] = estimateBandwidthPSD(...
 %       sig_processed, fs, snr, 'plot', true);
 %
+%   % 增加AR模型阶数上限以获得更平滑的PSD（默认0.5，即N/2）
+%   [Pxx_w, f_w, Pxx_a, f_a] = estimateBandwidthPSD(...
+%       sig_processed, fs, snr, 'ar_max_order_ratio', 0.6);
+%
 % 创建日期: 2025.12.10
 % 基于: method.m 中的 PSD_OFDM_rayleigh 函数
 % 修改日期: 2025.12.10 - 移除带宽计算功能，仅保留功率谱密度估计
+%           2025.12.16 - 增加AR模型阶数上限参数，支持更平滑的PSD估计
 %===============================================================================
 
 % 解析可选参数
@@ -46,6 +54,7 @@ addParameter(p, 'welch_window', 100, @isnumeric);
 addParameter(p, 'welch_overlap', 55, @isnumeric);
 addParameter(p, 'welch_nfft', 8192, @isnumeric);
 addParameter(p, 'ar_criterion', 'AIC', @ischar);
+addParameter(p, 'ar_max_order_ratio', 0.5, @isnumeric);  % 默认0.5，即N/2
 parse(p, varargin{:});
 
 plot_flag = p.Results.plot;
@@ -53,6 +62,7 @@ welch_window = p.Results.welch_window;
 welch_overlap = p.Results.welch_overlap;
 welch_nfft = p.Results.welch_nfft;
 ar_criterion = p.Results.ar_criterion;
+ar_max_order_ratio = p.Results.ar_max_order_ratio;
 
 %**************************************************************************
 % Welch算法功率谱估计
@@ -114,7 +124,7 @@ f_welch = f1;
 %      Burg函数内部会将双边谱转换为单边谱（0到fs/2），与Welch算法保持一致
 %      单边谱幅度 = 2 × 双边谱幅度（对于0 < f < fs/2）
 %      DC（f=0）和Nyquist频率（f=fs/2）的幅度保持不变
-[Pxx1, f, p] = Burg(sig_processed, fs, ar_criterion);
+[Pxx1, f, p] = Burg(sig_processed, fs, ar_criterion, ar_max_order_ratio);
 
 % 输出AR功率谱（正频率部分：0到fs/2）
 Pxx_ar = Pxx1;
@@ -195,12 +205,19 @@ function [psdviaBurg, f, p] = Burg(x, Fs, varargin)
 % Fs         采样频率
 % varargin   可以为数值型，即为AR模型阶数
 %            可以为字符串，即为准则准则AR模型阶数由准则确定
+%            如果为字符串，可额外提供最大阶数比例参数（默认0.33，即N/3）
 %
 % 根据输入参数类型判断
 if isnumeric(varargin{1}) && isscalar(varargin{1})
     p = varargin{1};
 elseif ischar(varargin{1})
     criterion = varargin{1};
+    % 检查是否有最大阶数比例参数
+    if length(varargin) >= 2 && isnumeric(varargin{2})
+        max_order_ratio = varargin{2};
+    else
+        max_order_ratio = 0.33;  % 默认N/3（保持向后兼容）
+    end
 else
     error('第2个参数必须为数值型或字符串');
 end
@@ -210,23 +227,24 @@ N = length(x);
 if exist('p', 'var') % p变量是否存在，如果存在则不需要估计，直接使用p值
     [a, E] = computeARpara(x, p);
 else % p不存在，需要估计，根据准则criterion
-    p = ceil(N/3); % 阶数一般不超出信号长度的1/3
+    p_max = ceil(N * max_order_ratio);  % 阶数上限，可配置
     
-    % 计算1到p阶的误差（用于选择最优阶数）
-    % 注意：这里的a未使用，但E用于计算目标函数goalF
-    [~, E] = computeARpara(x, p);
+    % 计算到p_max阶的AR模型参数
+    % 注意：computeARpara返回的E数组包含0到p_max阶的所有误差值
+    [~, E] = computeARpara(x, p_max);
     
-    % 计算目标函数的最小值
-    kc = 1:p + 1;
+    % 计算目标函数的最小值（从0阶到p_max阶）
+    kc = 0:p_max;  % 阶数从0到p_max
     switch criterion
         case 'FPE'
             goalF = E.*(N + (kc + 1))./(N - (kc + 1));
         case 'AIC'
             goalF = N.*log(E) + 2.*kc;
     end
-    [~, p] = min(goalF); % p是目标函数最小值的位值，也即准则准则确定的阶数
+    [~, p_idx] = min(goalF);  % 找到最小值的索引
+    p = p_idx - 1;  % 转换为实际阶数（因为索引从1开始，阶数从0开始）
     
-    % 使用p值重新计算AR模型参数
+    % 使用最优阶数p重新计算AR模型参数（以获得最终的a和E）
     [a, E] = computeARpara(x, p);
 end
 [h, f] = freqz(1, a, 20e5, Fs);

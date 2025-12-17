@@ -518,23 +518,24 @@ if use_channel
     fprintf('接收信号已保存在变量 Rx_data 中\n');
     
     %------------------------------------------------------------------------------
-    % 保存信号到mat文件
+    % 保存信号到mat文件（已禁用 - 不需要保存原信号）
     %------------------------------------------------------------------------------
-    fprintf('\n正在保存信号到mat文件...\n');
-    
-    % 生成文件名（包含参数信息）
-    mat_filename = sprintf('OFDM_signal_SNR%.1fdB_%dsubcarriers_%s.mat', ...
-        targetSNRdB, carrier_count, datestr(now, 'yyyymmdd_HHMMSS'));
-    
-    % 保存信号和相关参数
-    save(mat_filename, 'Rx_data', 'Tx_data', 'fs', 'targetSNRdB', ...
-        'carrier_count', 'subcarrier_spacing', 'IFFT_bin_length', ...
-        'GI', 'GIP', 'total_symbols', 'symbols_per_frame', ...
-        'use_rayleigh_fading', 'fd', 'N0', '-v7.3');
-    
-    fprintf('信号已保存到文件: %s\n', mat_filename);
-    fprintf('  包含变量: Rx_data, Tx_data, fs, targetSNRdB, carrier_count, ...\n');
-    fprintf('  文件格式: MATLAB v7.3 (支持大文件)\n\n');
+    % 注释掉保存原信号的代码，只保留PSD估计结果
+    % fprintf('\n正在保存信号到mat文件...\n');
+    % 
+    % % 生成文件名（包含参数信息）
+    % mat_filename = sprintf('OFDM_signal_SNR%.1fdB_%dsubcarriers_%s.mat', ...
+    %     targetSNRdB, carrier_count, datestr(now, 'yyyymmdd_HHMMSS'));
+    % 
+    % % 保存信号和相关参数
+    % save(mat_filename, 'Rx_data', 'Tx_data', 'fs', 'targetSNRdB', ...
+    %     'carrier_count', 'subcarrier_spacing', 'IFFT_bin_length', ...
+    %     'GI', 'GIP', 'total_symbols', 'symbols_per_frame', ...
+    %     'use_rayleigh_fading', 'fd', 'N0', '-v7.3');
+    % 
+    % fprintf('信号已保存到文件: %s\n', mat_filename);
+    % fprintf('  包含变量: Rx_data, Tx_data, fs, targetSNRdB, carrier_count, ...\n');
+    % fprintf('  文件格式: MATLAB v7.3 (支持大文件)\n\n');
     
     %------------------------------------------------------------------------------
     % 绘制接收信号的时域和频域图
