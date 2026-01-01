@@ -1,0 +1,4 @@
+信噪比估计
+运行下面两个文件即可
+snr_est_awgn
+snr_est_mysig
