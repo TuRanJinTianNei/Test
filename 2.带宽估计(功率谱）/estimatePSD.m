@@ -1,43 +1,143 @@
-function [Pxx_welch, f_welch, Pxx_ar, f_ar] = estimateBandwidthPSD(sig_processed, fs, snr, varargin)
+function [Pxx_welch, f_welch, Pxx_ar, f_ar] = estimatePSD(sig_processed, fs, snr, varargin)
 %===============================================================================
-% estimateBandwidthPSD.m - 使用Welch算法和AR模型法估计信号功率谱密度
+% estimatePSD.m - 使用Welch算法和AR模型法估计信号功率谱密度
 % 
 % 功能说明:
-%   对已处理的信号（上变频、Rayleigh信道、加噪声）进行功率谱密度估计
+%   对已处理的信号进行功率谱密度估计，特别适用于signalGenerate.m生成的接收信号
 %   使用两种方法：
 %   1. Welch算法（周期图平均法）
 %   2. AR模型法（自回归模型，使用Burg算法）
 %
 % 输入参数:
-%   sig_processed  - 已处理的信号（实数信号，行向量）
-%                    通常已经过：上变频、Rayleigh衰落信道、AWGN噪声
+%   sig_processed  - 输入信号（实数信号，行向量或列向量）
+%                    可以是：
+%                    - signalGenerate.m生成的Rx_data（推荐）
+%                    - signalGenerate.m生成的Tx_data
+%                    - 其他已处理的OFDM基带信号
+%                    注意：信号应为实数基带信号，已通过共轭对称映射
 %   fs             - 采样频率（Hz）
+%                    对于signalGenerate.m：fs = 3.84e6 Hz（LTE 3MHz标准）
 %   snr            - 信噪比（dB），用于绘图标题显示
+%                    对于signalGenerate.m：使用targetSNRdB变量
 %   varargin       - 可选参数（名称-值对）:
 %                    'plot'      - 是否绘制PSD图，默认false
 %                    'welch_window' - Welch算法窗长度，默认100
 %                    'welch_overlap' - Welch算法重叠样本数，默认55
 %                    'welch_nfft' - Welch算法FFT点数，默认8192
-%                    'ar_criterion' - AR模型阶数选择准则，默认'AIC'
+%                    'ar_criterion' - AR模型阶数选择准则，默认'AIC'（可选'AIC'或'FPE'）
 %
 % 输出参数:
-%   Pxx_welch      - Welch算法功率谱密度估计值（dB，归一化）
-%   f_welch        - Welch算法对应的频率向量（Hz）
-%   Pxx_ar         - AR模型功率谱密度估计值（dB，归一化）
-%   f_ar           - AR模型对应的频率向量（Hz）
+%   Pxx_welch      - Welch算法功率谱密度估计值（dB，归一化，峰值在0dB）
+%   f_welch        - Welch算法对应的频率向量（Hz，单边谱：0到fs/2）
+%   Pxx_ar         - AR模型功率谱密度估计值（dB，归一化，峰值在0dB）
+%   f_ar           - AR模型对应的频率向量（Hz，单边谱：0到fs/2）
 %
 % 使用示例:
-%   % 基本用法
-%   [Pxx_w, f_w, Pxx_a, f_a] = estimateBandwidthPSD(sig_processed, fs, snr);
+%   % 示例1：独立运行（自动生成信号）
+%   estimatePSD  % 将自动调用signalGenerate.m生成信号，然后进行PSD估计并绘图
 %
-%   % 绘制PSD图
-%   [Pxx_w, f_w, Pxx_a, f_a] = estimateBandwidthPSD(...
-%       sig_processed, fs, snr, 'plot', true);
+%   % 示例2：使用signalGenerate.m生成的接收信号
+%   signalGenerate;  % 生成Tx_data和Rx_data
+%   [Pxx_w, f_w, Pxx_a, f_a] = estimatePSD(Rx_data, fs, targetSNRdB);
+%
+%   % 示例3：绘制PSD图
+%   [Pxx_w, f_w, Pxx_a, f_a] = estimatePSD(...
+%       Rx_data, fs, targetSNRdB, 'plot', true);
+%
+%   % 示例4：自定义Welch算法参数
+%   [Pxx_w, f_w, Pxx_a, f_a] = estimatePSD(...
+%       Rx_data, fs, targetSNRdB, 'welch_window', 200, 'welch_nfft', 16384);
+%
+%   % 示例5：使用AR模型的FPE准则
+%   [Pxx_w, f_w, Pxx_a, f_a] = estimatePSD(...
+%       Rx_data, fs, targetSNRdB, 'ar_criterion', 'FPE');
 %
 % 创建日期: 2025.12.10
 % 基于: method.m 中的 PSD_OFDM_rayleigh 函数
-% 修改日期: 2025.12.10 - 移除带宽计算功能，仅保留功率谱密度估计
+% 修改日期: 
+%   2025.12.10 - 移除带宽计算功能，仅保留功率谱密度估计
+%   2025.12.23 - 优化以适配signalGenerate.m的输出，添加输入验证和更好的注释
+%   2025.12.23 - 添加独立运行模式，无输入参数时自动生成信号
+%   2025.12.23 - 文件重命名，文件名与函数名一致
 %===============================================================================
+
+%**************************************************************************
+% 独立运行模式：如果没有输入参数，自动生成信号
+%**************************************************************************
+if nargin == 0
+    fprintf('========================================\n');
+    fprintf('功率谱密度估计程序（独立运行模式）\n');
+    fprintf('========================================\n\n');
+    
+    % 检查工作空间中是否已有信号数据
+    if exist('Rx_data', 'var') && exist('fs', 'var') && exist('targetSNRdB', 'var')
+        fprintf('检测到工作空间中已有信号数据，直接使用...\n');
+        fprintf('  - 使用变量: Rx_data\n');
+        fprintf('  - 采样频率: %.2f MHz\n', fs/1e6);
+        fprintf('  - SNR: %.1f dB\n\n', targetSNRdB);
+        sig_processed = Rx_data;
+        snr = targetSNRdB;
+    elseif exist('Tx_data', 'var') && exist('fs', 'var')
+        fprintf('检测到工作空间中已有发送信号，使用Tx_data...\n');
+        fprintf('  - 使用变量: Tx_data\n');
+        fprintf('  - 采样频率: %.2f MHz\n', fs/1e6);
+        if exist('targetSNRdB', 'var')
+            snr = targetSNRdB;
+        else
+            snr = 20;  % 默认SNR
+            fprintf('  - SNR: %.1f dB（默认值，未找到targetSNRdB）\n', snr);
+        end
+        fprintf('\n');
+        sig_processed = Tx_data;
+    else
+        fprintf('未找到信号数据，正在调用signalGenerate.m生成信号...\n\n');
+        % 调用signalGenerate.m生成信号
+        signalGenerate;
+        
+        % 检查是否生成了接收信号
+        if exist('Rx_data', 'var')
+            fprintf('\n使用生成的接收信号（Rx_data）进行PSD估计...\n');
+            sig_processed = Rx_data;
+            snr = targetSNRdB;
+        elseif exist('Tx_data', 'var')
+            fprintf('\n使用生成的发送信号（Tx_data）进行PSD估计...\n');
+            sig_processed = Tx_data;
+            if exist('targetSNRdB', 'var')
+                snr = targetSNRdB;
+            else
+                snr = 20;  % 默认SNR
+            end
+        else
+            error('错误：signalGenerate.m未能生成信号数据');
+        end
+        fprintf('  采样频率: %.2f MHz\n', fs/1e6);
+        fprintf('  SNR: %.1f dB\n\n', snr);
+    end
+    
+    % 独立运行模式默认启用绘图
+    varargin = {'plot', true};
+    fprintf('独立运行模式：默认启用绘图\n\n');
+end
+
+% 输入验证（函数调用模式）
+if nargin > 0 && nargin < 3
+    error('错误：函数调用模式需要至少3个输入参数：sig_processed, fs, snr\n或者无参数运行以进入独立运行模式');
+end
+
+% 确保信号是行向量
+if exist('sig_processed', 'var') && iscolumn(sig_processed)
+    sig_processed = sig_processed';
+end
+
+% 验证信号长度
+if length(sig_processed) < 100
+    warning('警告：信号长度过短（<100样本），可能影响PSD估计精度');
+end
+
+% 验证采样频率
+if fs <= 0
+    error('错误：采样频率fs必须大于0');
+end
 
 % 解析可选参数
 p = inputParser;
@@ -45,7 +145,7 @@ addParameter(p, 'plot', false, @islogical);
 addParameter(p, 'welch_window', 100, @isnumeric);
 addParameter(p, 'welch_overlap', 55, @isnumeric);
 addParameter(p, 'welch_nfft', 8192, @isnumeric);
-addParameter(p, 'ar_criterion', 'AIC', @ischar);
+addParameter(p, 'ar_criterion', 'AIC', @(x) ischar(x) && (strcmpi(x, 'AIC') || strcmpi(x, 'FPE')));
 parse(p, varargin{:});
 
 plot_flag = p.Results.plot;
@@ -53,6 +153,28 @@ welch_window = p.Results.welch_window;
 welch_overlap = p.Results.welch_overlap;
 welch_nfft = p.Results.welch_nfft;
 ar_criterion = p.Results.ar_criterion;
+
+% 验证Welch算法参数
+if welch_window <= 0 || welch_overlap < 0 || welch_overlap >= welch_window
+    error('错误：Welch算法参数无效。要求：welch_window > 0, 0 <= welch_overlap < welch_window');
+end
+
+if welch_nfft < welch_window
+    warning('警告：FFT点数（%d）小于窗长度（%d），建议welch_nfft >= welch_window', ...
+        welch_nfft, welch_window);
+end
+
+% 显示处理信息（可选，用于调试）
+if plot_flag
+    fprintf('功率谱密度估计参数：\n');
+    fprintf('  - 信号长度: %d 样本\n', length(sig_processed));
+    fprintf('  - 采样频率: %.2f MHz\n', fs/1e6);
+    fprintf('  - SNR: %.1f dB\n', snr);
+    fprintf('  - Welch算法：窗长度=%d, 重叠=%d, FFT点数=%d\n', ...
+        welch_window, welch_overlap, welch_nfft);
+    fprintf('  - AR模型：阶数选择准则=%s\n', ar_criterion);
+    fprintf('开始计算功率谱密度...\n');
+end
 
 %**************************************************************************
 % Welch算法功率谱估计
@@ -62,6 +184,10 @@ ar_criterion = p.Results.ar_criterion;
 %      正频率部分的幅度乘以2（除了DC和Nyquist频率），所以输出已经是单边谱
 %      单边谱幅度 = 2 × 双边谱幅度（对于0 < f < fs/2）
 %      DC（f=0）和Nyquist频率（f=fs/2）的幅度保持不变
+%
+% 对于signalGenerate.m生成的信号：
+%   - Rx_data或Tx_data都是实数基带信号（通过共轭对称映射实现）
+%   - 可以直接使用pwelch进行功率谱估计
 [Pxx2, f1] = pwelch(sig_processed, hanning(welch_window), welch_overlap, welch_nfft, fs);
 
 % 验证：确保频率范围正确（0到fs/2）
@@ -78,29 +204,17 @@ if min(f1) < -eps || max(f1) > fs/2 + eps
     Pxx2 = Pxx2(positive_freq_idx);
 end
 
-% 显式验证并确保单边谱转换正确
-% 
-% 【单边谱转换规则说明】
-% 对于实信号，双边功率谱密度（PSD）是共轭对称的，即 P(-f) = P(f)
-% 单边谱转换规则：
-%   - DC分量（f=0）：幅度不变（P_single(0) = P_double(0)）
-%   - 正频率（0 < f < fs/2）：幅度乘以2（P_single(f) = 2 × P_double(f)）
-%   - Nyquist频率（f=fs/2）：幅度不变（P_single(fs/2) = P_double(fs/2)）
-% 
-% 【pwelch函数行为】
-% MATLAB的pwelch函数对实信号自动返回单边谱（0到fs/2），并且已经自动将
-% 正频率部分的功率谱密度乘以2（除了DC和Nyquist频率），所以输出已经是单边谱。
-% 因此，我们不需要再次进行转换，只需要验证频率范围确实是0到fs/2。
-% 
-% 【验证步骤】
-% 1. 验证频率范围：确保f1在[0, fs/2]范围内
-% 2. 如果频率范围不正确，提取正频率部分
-% 3. 确保输出是单边谱格式
-
 % 归一化处理（在转换为dB之前）
 Pxx22 = Pxx2;
-Pxx22 = Pxx22 / min(Pxx22);  % 归一化到最小值
-Pxx22 = 10*log10(Pxx22);     % 转换为dB单位
+% 归一化到最小值（添加小值保护，避免除以0或极小值）
+min_val = min(Pxx22);
+if min_val <= 0 || min_val < max(Pxx22) * 1e-10
+    % 如果最小值太小或为0，使用最大值归一化
+    Pxx22 = Pxx22 / max(Pxx22);
+else
+    Pxx22 = Pxx22 / min_val;  % 归一化到最小值
+end
+Pxx22 = 10*log10(Pxx22 + eps);     % 转换为dB单位（添加eps避免log10(0)）
 Pxx22 = Pxx22 - max(Pxx22);  % 归一化到最大值（峰值在0dB）
 
 % 输出Welch功率谱（单边谱：0到fs/2）
@@ -114,15 +228,32 @@ f_welch = f1;
 %      Burg函数内部会将双边谱转换为单边谱（0到fs/2），与Welch算法保持一致
 %      单边谱幅度 = 2 × 双边谱幅度（对于0 < f < fs/2）
 %      DC（f=0）和Nyquist频率（f=fs/2）的幅度保持不变
+%
+% 对于signalGenerate.m生成的信号：
+%   - AR模型法可以提供更高的频率分辨率
+%   - 特别适合短数据记录或需要精细频谱细节的场景
 [Pxx1, f, p] = Burg(sig_processed, fs, ar_criterion);
 
 % 输出AR功率谱（正频率部分：0到fs/2）
 Pxx_ar = Pxx1;
 f_ar = f;
 
+% 显示完成信息（如果启用了绘图）
+if plot_flag
+    fprintf('功率谱密度计算完成！\n');
+    fprintf('  - Welch算法：频率点数 = %d，频率范围 = %.3f MHz 到 %.3f MHz\n', ...
+        length(f_welch), min(f_welch)/1e6, max(f_welch)/1e6);
+    fprintf('  - AR模型法：频率点数 = %d，频率范围 = %.3f MHz 到 %.3f MHz，模型阶数 = %d\n', ...
+        length(f_ar), min(f_ar)/1e6, max(f_ar)/1e6, p);
+end
+
 %**************************************************************************
 % 绘制PSD图形（可选）
 %**************************************************************************
+% 如果启用绘图，将显示：
+%   1. AR模型功率谱密度估计（单边谱）
+%   2. Welch算法功率谱密度估计（单边谱）
+%   3. OFDM信号频谱（单边谱，使用FFT直接计算）
 if plot_flag
     % AR模型功率谱图（单边谱）
     figure('Name', 'AR模型功率谱密度估计（单边谱）')
@@ -179,6 +310,28 @@ if plot_flag
     grid on;
 end
 
+%**************************************************************************
+% 独立运行模式：显示总结信息
+%**************************************************************************
+if nargin == 0
+    fprintf('\n========================================\n');
+    fprintf('功率谱密度估计完成！\n');
+    fprintf('========================================\n');
+    fprintf('结果已保存在以下变量中：\n');
+    fprintf('  - Pxx_welch: Welch算法PSD估计（dB，归一化）\n');
+    fprintf('  - f_welch: Welch算法频率向量（Hz）\n');
+    fprintf('  - Pxx_ar: AR模型PSD估计（dB，归一化）\n');
+    fprintf('  - f_ar: AR模型频率向量（Hz）\n');
+    fprintf('\nPSD估计参数：\n');
+    fprintf('  - Welch算法：频率点数 = %d，频率范围 = %.3f MHz 到 %.3f MHz\n', ...
+        length(f_welch), min(f_welch)/1e6, max(f_welch)/1e6);
+    fprintf('  - AR模型法：频率点数 = %d，频率范围 = %.3f MHz 到 %.3f MHz，模型阶数 = %d\n', ...
+        length(f_ar), min(f_ar)/1e6, max(f_ar)/1e6, p);
+    fprintf('\n提示：可以使用以下命令进行带宽估计：\n');
+    fprintf('  [B_estimated, results] = estimateBandwidthMethods(Pxx_welch, f_welch, ''method'', ''all'');\n');
+    fprintf('========================================\n');
+end
+
 end
 
 %**************************************************************************
@@ -212,19 +365,25 @@ if exist('p', 'var') % p变量是否存在，如果存在则不需要估计，�
 else % p不存在，需要估计，根据准则criterion
     p = ceil(N/3); % 阶数一般不超出信号长度的1/3
     
-    % 计算1到p阶的误差（用于选择最优阶数）
-    % 注意：这里的a未使用，但E用于计算目标函数goalF
+    % 计算0到p阶的误差（用于选择最优阶数）
+    % 注意：computeARpara返回的E长度为p+1，E(1)对应0阶，E(2)对应1阶，...，E(p+1)对应p阶
     [~, E] = computeARpara(x, p);
     
     % 计算目标函数的最小值
-    kc = 1:p + 1;
+    % kc是阶数索引：0到p，对应E(1)到E(p+1)
+    kc = 0:p;  % 阶数从0到p
     switch criterion
         case 'FPE'
-            goalF = E.*(N + (kc + 1))./(N - (kc + 1));
+            % FPE准则：FPE(k) = E(k+1) * (N + k + 1) / (N - k - 1)
+            % 其中k是阶数（0到p），E(k+1)是k阶对应的误差
+            goalF = E(kc+1).*(N + (kc + 1))./(N - (kc + 1));
         case 'AIC'
-            goalF = N.*log(E) + 2.*kc;
+            % AIC准则：AIC(k) = N*log(E(k+1)) + 2*k
+            % 其中k是阶数（0到p），E(k+1)是k阶对应的误差
+            goalF = N.*log(E(kc+1)) + 2.*kc;
     end
-    [~, p] = min(goalF); % p是目标函数最小值的位值，也即准则准则确定的阶数
+    [~, p_idx] = min(goalF); % p_idx是目标函数最小值的索引位置
+    p = kc(p_idx);  % 对应的阶数值（0到p之间的某个值）
     
     % 使用p值重新计算AR模型参数
     [a, E] = computeARpara(x, p);
@@ -305,3 +464,4 @@ for m = 1:p
     E(m + 1) = (1 - conj(k(m))*k(m))*E(m);
 end
 end
+

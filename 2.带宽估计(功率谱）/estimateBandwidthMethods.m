@@ -1,6 +1,6 @@
-function [B_estimated, results] = estimateBandwidthFromPSD(Pxx, f, varargin)
+function [B_estimated, results] = estimateBandwidthMethods(Pxx, f, varargin)
 %===============================================================================
-% estimateBandwidthFromPSD.m - 从功率谱密度估计带宽
+% estimateBandwidthMethods.m - 从功率谱密度估计带宽
 % 
 % 功能说明:
 %   提供多种方法从功率谱密度（PSD）估计信号带宽
@@ -42,17 +42,18 @@ function [B_estimated, results] = estimateBandwidthFromPSD(Pxx, f, varargin)
 %
 % 使用示例:
 %   % 方法1：阈值法
-%   [B, results] = estimateBandwidthFromPSD(Pxx, f, 'method', 'threshold', ...
+%   [B, results] = estimateBandwidthMethods(Pxx, f, 'method', 'threshold', ...
 %       'threshold', -3);
 %
 %   % 方法2：能量百分比法
-%   [B, results] = estimateBandwidthFromPSD(Pxx, f, 'method', 'energy', ...
+%   [B, results] = estimateBandwidthMethods(Pxx, f, 'method', 'energy', ...
 %       'energy_percent', 0.9);
 %
 %   % 方法3：使用所有方法
-%   [B_all, results_all] = estimateBandwidthFromPSD(Pxx, f, 'method', 'all');
+%   [B_all, results_all] = estimateBandwidthMethods(Pxx, f, 'method', 'all');
 %
 % 创建日期: 2025.12.10
+% 修改日期: 2025.12.23 - 文件重命名，文件名与函数名一致
 %===============================================================================
 
 % 解析可选参数
@@ -102,7 +103,7 @@ if strcmpi(method, 'all')
     results = struct();
     
     for i = 1:length(methods)
-        [B_temp, results_temp] = estimateBandwidthFromPSD(Pxx, f, ...
+        [B_temp, results_temp] = estimateBandwidthMethods(Pxx, f, ...
             'method', methods{i}, ...
             'threshold', threshold, ...
             'energy_percent', energy_percent, ...
