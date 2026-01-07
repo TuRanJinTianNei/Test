@@ -33,8 +33,6 @@ function [B_welch, B_ar, B_ideal, results] = estimateBandwidth(sig_processed, fs
 %                                          'energy'    - 能量百分比法
 %                                          'peak_drop' - 峰值下降法
 %                                          'rms'       - RMS带宽法
-%                                          'integral'  - 积分法
-%                                          'all'       - 使用所有方法
 %                        'threshold'      - 阈值法阈值（dB），默认-3
 %                        'energy_percent' - 能量百分比（0-1），默认0.9（90%）
 %                        'peak_drop_db'   - 峰值下降dB值，默认3
@@ -52,7 +50,9 @@ function [B_welch, B_ar, B_ideal, results] = estimateBandwidth(sig_processed, fs
 %                        否则返回标量
 %   B_ideal             - 理论带宽（Hz）= carrier_count * subcarrier_spacing
 %   results             - 详细结果结构体，包含：
-%                        .welch - Welch算法PSD的带宽估计结果
+%                        .welch
+%                                          'integral'  - 积分法
+%                                          'all'       - 使用所有方法 - Welch算法PSD的带宽估计结果
 %                        .ar    - AR模型PSD的带宽估计结果
 %                        .psd   - PSD估计结果（Pxx_welch, f_welch, Pxx_ar, f_ar）
 %

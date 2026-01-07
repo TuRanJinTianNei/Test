@@ -74,15 +74,34 @@ ff = interp(f,100);
 %***********************************************
 %载频估计
 %***********************************************
-for i=1:length(normal_data)/2
-  if(abs(normal_data(i)) ==max(abs(normal_data(1,1:length(normal_data)/2))))
-      f1=abs(ff(i));
-  end
+% 针对宽带信号（如OFDM），PSD是平坦的，直接找最大值会导致误差。
+% 使用阈值法找到频带范围，取中心作为载频估计。
+abs_data = abs(normal_data);
+len_half = floor(length(abs_data)/2);
+
+% 负频率部分
+neg_part = abs_data(1:len_half);
+neg_freq = ff(1:len_half);
+max_neg = max(neg_part);
+% 使用0.8作为阈值（-2dB左右），取能量集中的区域中心
+indices_neg = find(neg_part > max_neg * 0.8);
+if ~isempty(indices_neg)
+    f1 = abs(mean(neg_freq(indices_neg))); 
+else
+    [~, idx] = max(neg_part);
+    f1 = abs(neg_freq(idx));
 end
-for ii=length(normal_data)/2:length(normal_data)
-  if(abs(normal_data(ii)) ==max(abs(normal_data(1,length(normal_data)/2:end))))
-      f2=abs(ff(ii));
-  end
+
+% 正频率部分
+pos_part = abs_data(len_half+1:end);
+pos_freq = ff(len_half+1:end);
+max_pos = max(pos_part);
+indices_pos = find(pos_part > max_pos * 0.8);
+if ~isempty(indices_pos)
+    f2 = abs(mean(pos_freq(indices_pos)));
+else
+    [~, idx] = max(pos_part);
+    f2 = abs(pos_freq(idx));
 end
 
 ff=(f1+f2)/2;

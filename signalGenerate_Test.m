@@ -158,10 +158,11 @@ fprintf('  完成！\n\n');
 %   [166~255]: 负频率部分（90个子载波，共轭对称）
 % 总有效子载波：180个数据子载波 + 1个DC = 181个
 % 子载波索引计算：LTE 3MHz标准分配
-positive_carriers = 1:90;           % 正频率子载波：[1~90]
-negative_carriers = 166:255;        % 负频率子载波：[166~255]
-dc_carrier = 0;                     % DC子载波：[0]
-guard_band = 91:165;                % 保护带：[91~165]，置零
+% 修正：MATLAB FFT索引中，1是DC，2是第一个正频率
+positive_carriers = 2:91;               % 正频率子载波：[2~91] (90个)
+negative_carriers = 167:256;            % 负频率子载波：[167~256] (90个，共轭对称)
+dc_carrier = 0;                         % DC子载波：[0] (MATLAB索引1)
+guard_band = 92:166;                    % 保护带：[92~166] (75个)
 
 % 为了兼容现有代码结构，将正频率和负频率合并
 carriers = positive_carriers;       % 正频率子载波索引
@@ -188,8 +189,8 @@ if use_pilot_equalization
 else
     % 不使用导频，所有子载波都是数据子载波
     % LTE 3MHz：正频率90个，负频率90个（共轭对称）
-    data_carriers = positive_carriers;  % [1~90]
-    data_conjugate_carriers = negative_carriers;  % [166~255]
+    data_carriers = positive_carriers;  % [2~91]
+    data_conjugate_carriers = negative_carriers;  % [167~256]
     pilot_carriers = [];
     pilot_conjugate_carriers = [];
     
@@ -205,21 +206,21 @@ fprintf('步骤3: 频域子载波映射（LTE 3MHz标准）...\n');
 IFFT_modulation = zeros(symbols_per_carrier, IFFT_bin_length);
 
 % LTE 3MHz标准分配：
-%   [0]: DC子载波（置零）
-%   [1~90]: 正频率数据子载波
-%   [91~165]: 保护带（置零）
-%   [166~255]: 负频率数据子载波（共轭对称）
+%   [1]: DC子载波（置零）
+%   [2~91]: 正频率数据子载波
+%   [92~166]: 保护带（置零）
+%   [167~256]: 负频率数据子载波（共轭对称）
 
 % 1. DC子载波置零
 IFFT_modulation(:, dc_carrier + 1) = 0;  % MATLAB索引从1开始，所以是索引1
 
-% 2. 映射正频率数据子载波 [1~90]
+% 2. 映射正频率数据子载波 [2~91]
 IFFT_modulation(:, data_carriers) = data_matrix;
 
-% 3. 保护带置零 [91~165]
+% 3. 保护带置零 [92~166]
 IFFT_modulation(:, guard_band) = 0;
 
-% 4. 映射负频率数据子载波 [166~255]（共轭对称）
+% 4. 映射负频率数据子载波 [167~256]（共轭对称）
 IFFT_modulation(:, data_conjugate_carriers) = conj(data_matrix);
 
 % 5. 映射导频子载波（如果使用导频）
@@ -238,10 +239,10 @@ freq_end_hz = (carrier_end_bin - 1) * freq_bin_spacing;
 actual_bandwidth_hz = freq_end_hz - freq_start_hz;  % 实际占用带宽（Hz）
 
 fprintf('  - LTE 3MHz标准子载波分配（256点FFT）：\n');
-fprintf('    [0]: DC子载波（置0）\n');
-fprintf('    [1~90]: 正频率数据子载波（%d个）\n', length(data_carriers));
-fprintf('    [91~165]: 保护带（置零，75个子载波）\n');
-fprintf('    [166~255]: 负频率数据子载波（%d个，共轭对称）\n', length(data_conjugate_carriers));
+fprintf('    [1]: DC子载波（置0）\n');
+fprintf('    [2~91]: 正频率数据子载波（%d个）\n', length(data_carriers));
+fprintf('    [92~166]: 保护带（置零，75个子载波）\n');
+fprintf('    [167~256]: 负频率数据子载波（%d个，共轭对称）\n', length(data_conjugate_carriers));
 fprintf('  - 子载波bin范围: %d 到 %d（正频率）\n', carrier_start_bin, carrier_end_bin);
 fprintf('  - 频率范围: %.3f MHz 到 %.3f MHz（相对于DC）\n', ...
     freq_start_hz/1e6, freq_end_hz/1e6);
@@ -312,20 +313,25 @@ for i = 1:symbols_per_carrier
     GI_current = GI_per_symbol(i);  % 当前符号的CP长度
     symbol_length = IFFT_bin_length + GI_current + GIP;  % 当前符号总长度
     
-    % 生成升余弦窗函数（覆盖CP+主体部分，长度为N+GI_current）
-    rcos_win_full = rcoswindow(beta, IFFT_bin_length+GI_current);  % 列向量
-    rcos_win = rcos_win_full(1:IFFT_bin_length+GI_current)';  % 只取前N+GI_current个元素，转置为行向量
+    % 生成升余弦窗函数（覆盖CP+主体+后缀）
+    % rcoswindow生成长度为 round((1+beta)*Ts)+1，我们需要截取到 symbol_length
+    Ts_current = IFFT_bin_length + GI_current;
+    rcos_win_full = rcoswindow(beta, Ts_current);  % 列向量
     
-    % 符号结构：[CP(GI_current) | 主体(N) | 后缀(GIP)]
-    % 窗函数应用于前 N+GI_current 个样本（CP+主体）
-    windowed_time_wave_matrix_cp(i, 1:IFFT_bin_length+GI_current) = ...
-        real(time_wave_matrix_cp(i, 1:IFFT_bin_length+GI_current)) .* rcos_win;
-    
-    % 后缀部分（GIP个样本）：保持原值，用于与下一个符号的CP重叠
-    if GIP > 0 && symbol_length > IFFT_bin_length+GI_current
-        windowed_time_wave_matrix_cp(i, IFFT_bin_length+GI_current+1:symbol_length) = ...
-            real(time_wave_matrix_cp(i, IFFT_bin_length+GI_current+1:symbol_length));
+    % 截取窗函数以匹配符号长度
+    % 注意：rcoswindow生成的长度可能比symbol_length多1个点或正好
+    if length(rcos_win_full) >= symbol_length
+        rcos_win = rcos_win_full(1:symbol_length)';  % 转置为行向量
+    else
+        % 理论上不应发生，但作为防御
+        rcos_win = [rcos_win_full; zeros(symbol_length-length(rcos_win_full), 1)]';
     end
+    
+    % 应用窗函数（覆盖整个符号：CP + 主体 + 后缀）
+    windowed_time_wave_matrix_cp(i, 1:symbol_length) = ...
+        real(time_wave_matrix_cp(i, 1:symbol_length)) .* rcos_win;
+    
+    % 之前的代码错误地截断了窗并手动复制了后缀，这里已修正为全长加窗
 end
 fprintf('  - 窗函数滚降系数: 1/%d\n', round(1/beta));
 fprintf('  完成！\n\n');
@@ -496,9 +502,68 @@ if plot_signal
     fprintf('    - 占用带宽：%.3f MHz (%.0f kHz) - 180个子载波 × 15 kHz\n', B_ideal/1e6, B_ideal/1e3);
     fprintf('    - 实际占用频率范围：%.3f MHz 到 %.3f MHz（正频率部分）\n', ...
         freq_start_hz/1e6, freq_end_hz/1e6);
-    fprintf('    - 子载波分配：[1~90]正频率，[91~165]保护带，[166~255]负频率\n');
+    fprintf('    - 子载波分配：[2~91]正频率，[92~166]保护带，[167~256]负频率\n');
     fprintf('    - IFFT点数：256，采样频率：%.2f MHz\n', fs/1e6);
     fprintf('\n');
+
+    % 绘制子载波映射图
+    figure('Name', 'OFDM子载波映射（LTE 3MHz标准）', 'Position', [100, 100, 1000, 400]);
+    
+    % 准备绘图数据
+    carriers_plot = zeros(1, IFFT_bin_length);
+    
+    % 标记数据子载波（正频率和负频率）
+    carriers_plot(data_carriers) = 1;
+    carriers_plot(data_conjugate_carriers) = 1;
+    
+    % 标记导频子载波（如果有）
+    if use_pilot_equalization
+        carriers_plot(pilot_carriers) = 1.5;
+        carriers_plot(pilot_conjugate_carriers) = 1.5;
+    end
+    
+    % 绘制
+    stem(1:IFFT_bin_length, carriers_plot, 'b.', 'MarkerSize', 4);
+    hold on;
+    
+    % 标记DC子载波
+    plot(dc_carrier+1, 0, 'rx', 'MarkerSize', 10, 'LineWidth', 2, 'DisplayName', 'DC子载波');
+    
+    % 标记保护带区域
+    % 保护带是连续的区域 [92~166]
+    fill([min(guard_band) max(guard_band) max(guard_band) min(guard_band)], ...
+         [-0.1 -0.1 1.6 1.6], 'r', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '保护带（空子载波）');
+         
+    % 设置坐标轴
+    xlim([1 IFFT_bin_length]);
+    ylim([-0.2 1.8]);
+    xlabel('子载波索引 (1-256)');
+    ylabel('类型');
+    title(sprintf('LTE 3MHz 子载波映射 (256点FFT, %d个有效子载波)', carrier_count+1));
+    
+    % 自定义Y轴刻度
+    set(gca, 'YTick', [0 1 1.5]);
+    if use_pilot_equalization
+        set(gca, 'YTickLabel', {'Null/DC', 'Data', 'Pilot'});
+    else
+        set(gca, 'YTickLabel', {'Null/DC', 'Data', ''});
+    end
+    
+    % 添加图例
+    % 创建用于图例的虚拟对象
+    h_data = plot(nan, nan, 'b.', 'DisplayName', '数据子载波');
+    h_dc = plot(nan, nan, 'rx', 'MarkerSize', 10, 'LineWidth', 2, 'DisplayName', 'DC子载波');
+    h_guard = fill(nan, nan, 'r', 'FaceAlpha', 0.1, 'EdgeColor', 'none', 'DisplayName', '保护带');
+    
+    if use_pilot_equalization
+        h_pilot = plot(nan, nan, 'b.', 'MarkerSize', 8, 'DisplayName', '导频子载波');
+        legend([h_data, h_pilot, h_dc, h_guard], 'Location', 'best');
+    else
+        legend([h_data, h_dc, h_guard], 'Location', 'best');
+    end
+    
+    grid on;
+    fprintf('子载波映射图绘制完成！\n');
 end
 
 fprintf('所有步骤完成！\n');
